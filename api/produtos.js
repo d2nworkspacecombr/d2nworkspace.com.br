@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
     const body = req.body || {};
     const { data, error } = await supabase
       .from("produtos")
-      .insert({ nome: body.nome, descricao: body.descricao })
+      .insert({ nome: body.nome, descricao: body.descricao, categoria: body.categoria || null })
       .select()
       .single();
 
