@@ -35,6 +35,9 @@ module.exports = async (req, res) => {
       .from("clientes")
       .insert({
         nome: body.nome,
+        razao_social: body.razao_social,
+        tipo_documento: body.tipo_documento || "cnpj",
+        cnpj_cpf: body.cnpj_cpf,
         segmento: body.segmento,
         porte: body.porte,
         interlocutor: body.interlocutor,

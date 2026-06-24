@@ -32,4 +32,13 @@ function enviarErro(res, status, mensagem) {
   res.status(status).json({ erro: mensagem });
 }
 
-module.exports = { clienteComoUsuario, clientePublico, enviarErro };
+// Cliente "administrativo" — usa a chave secreta (service_role), nunca
+// exposta ao navegador. Só usada aqui, dentro de funções do servidor,
+// para ações que o usuário comum não pode fazer (como criar um login novo).
+function clienteAdmin() {
+  return createClient(SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, {
+    auth: { persistSession: false },
+  });
+}
+
+module.exports = { clienteComoUsuario, clientePublico, clienteAdmin, enviarErro };
