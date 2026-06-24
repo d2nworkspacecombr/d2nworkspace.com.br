@@ -16,11 +16,19 @@ module.exports = async (req, res) => {
   }
 
   // Já busca o perfil (role, nome, cargo) pra não precisar de uma segunda chamada
-  const { data: usuario } = await supabase
+  const { data: usuario, error: erroPerfil } = await supabase
     .from("usuarios")
     .select("id, nome, email, role, cargo")
     .eq("id", data.user.id)
     .single();
+
+  if (erroPerfil || !usuario) {
+    return enviarErro(
+      res,
+      500,
+      "Login certo, mas seu perfil não foi encontrado na tabela 'usuarios'. Fale com o administrador."
+    );
+  }
 
   res.status(200).json({
     access_token: data.session.access_token,
