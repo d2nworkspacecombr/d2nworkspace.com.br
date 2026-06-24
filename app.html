@@ -163,6 +163,26 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .multi-dropdown .opcao{padding:9px 13px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .multi-dropdown .opcao:hover{background:var(--paper)}
 .multi-dropdown .opcao-vazia{padding:12px 13px;font-size:12.5px;color:var(--ink-faint)}
+
+/* BUSCA */
+.busca-wrap{position:relative;margin-bottom:1.1rem;max-width:340px}
+.busca-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ink-faint)}
+.busca-wrap input{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+  font-family:'Barlow',sans-serif;font-size:13.5px;background:#fff;outline:none;transition:border-color .15s}
+.busca-wrap input:focus{border-color:var(--navy-600)}
+
+/* GRADE DE CARDS DE CLIENTE */
+.grade-clientes{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:14px}
+.card-cliente{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:1.2rem;cursor:pointer;
+  box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .12s}
+.card-cliente:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.card-cliente .topo{display:flex;align-items:center;gap:11px;margin-bottom:.9rem}
+.card-cliente .logo{width:42px;height:42px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--paper)}
+.card-cliente .logo-fallback{width:42px;height:42px;border-radius:10px;flex-shrink:0;background:var(--grad-accent);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Sora',sans-serif;font-weight:600;font-size:14px;text-transform:uppercase}
+.card-cliente .nome-cliente{font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:var(--navy-700);line-height:1.3}
+.card-cliente .segmento-cliente{font-size:11.5px;color:var(--ink-faint);margin-top:1px}
+.card-cliente .rodape-card{display:flex;justify-content:space-between;align-items:center;margin-top:.4rem}
 </style>
 </head>
 <body>
@@ -371,6 +391,51 @@ function esc(s) {
 }
 
 // ============================================================================
+// BUSCA — barra de pesquisa reutilizável em qualquer lista
+// ============================================================================
+function htmlBusca(id, placeholder) {
+  return `
+    <div class="busca-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="${id}" placeholder="${esc(placeholder || 'Buscar...')}">
+    </div>
+  `;
+}
+
+function ligarBusca(inputId, aoDigitar) {
+  document.getElementById(inputId).addEventListener('input', (e) => aoDigitar(e.target.value.trim().toLowerCase()));
+}
+
+// ============================================================================
+// GRADE DE CARDS DE CLIENTE — usada por Assessoria, Briefing, Diagnóstico...
+// ============================================================================
+function htmlGradeClientes(clientes, hrefBase) {
+  if (!clientes || clientes.length === 0) {
+    return `<p class="empty">Nenhum cliente encontrado.</p>`;
+  }
+  return `
+    <div class="grade-clientes">
+      ${clientes.map((c) => `
+        <div class="card-cliente" onclick="location.hash='${hrefBase}/${c.id}'">
+          <div class="topo">
+            ${c.logo_url
+              ? `<img class="logo" src="${esc(c.logo_url)}" alt="">`
+              : `<div class="logo-fallback">${esc((c.nome || '?').slice(0, 2))}</div>`}
+            <div>
+              <div class="nome-cliente">${esc(c.nome)}</div>
+              <div class="segmento-cliente">${esc(c.segmento) || '—'}</div>
+            </div>
+          </div>
+          <div class="rodape-card">
+            <span class="pill">${esc(c.status)}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ============================================================================
 // NAVEGAÇÃO (rotas por hash: #/, #/clientes, #/assessoria, #/assessoria/<id>)
 // ============================================================================
 const NAV_GRUPOS = [
@@ -489,11 +554,14 @@ function viewEmConstrucao(titulo) {
 // ============================================================================
 // VIEW: CLIENTES (lista + cadastro)
 // ============================================================================
+let _clientesCache = [];
+
 async function viewClientesLista() {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">Cadastro</div>
     <h1>Clientes</h1>
-    <div style="display:flex;justify-content:flex-end;margin:1.25rem 0 1rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-clientes', 'Buscar cliente...')}
       ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormCliente()">Novo cliente</button>` : ''}
     </div>
     <div id="tabela-clientes" class="card"><p class="empty">Carregando...</p></div>
@@ -501,7 +569,11 @@ async function viewClientesLista() {
 
   try {
     const { clientes } = await api('clientes');
-    renderTabelaClientes(clientes);
+    _clientesCache = clientes || [];
+    renderTabelaClientes(_clientesCache);
+    ligarBusca('busca-clientes', (termo) => {
+      renderTabelaClientes(_clientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
+    });
   } catch (e) {
     document.getElementById('tabela-clientes').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
   }
@@ -510,18 +582,18 @@ async function viewClientesLista() {
 function renderTabelaClientes(clientes) {
   const el = document.getElementById('tabela-clientes');
   if (!clientes || clientes.length === 0) {
-    el.innerHTML = `<p class="empty">Nenhum cliente cadastrado ainda.</p>`;
+    el.innerHTML = `<p class="empty">Nenhum cliente encontrado.</p>`;
     return;
   }
   el.innerHTML = `
     <table>
-      <thead><tr><th>Cliente</th><th>Segmento</th><th>Serviços</th><th>Status</th></tr></thead>
+      <thead><tr><th>Cliente</th><th>Segmento</th><th>Produtos</th><th>Status</th></tr></thead>
       <tbody>
         ${clientes.map((c) => `
           <tr class="linha" onclick="location.hash='#/clientes/${c.id}'">
             <td><a class="link" href="#/clientes/${c.id}">${esc(c.nome)}</a></td>
             <td>${esc(c.segmento) || '—'}</td>
-            <td>${(c.servicos || []).join(', ') || '—'}</td>
+            <td>${(c.produtos || []).map((p) => esc(p.nome)).join(', ') || '—'}</td>
             <td><span class="pill">${esc(c.status)}</span></td>
           </tr>
         `).join('')}
@@ -540,6 +612,16 @@ async function toggleFormCliente() {
     subtitulo: 'Os dados de Nome Fantasia aparecem nos documentos do sistema.',
     corpoHtml: `
       <form id="novo-cliente-form">
+        <div class="field" style="display:flex;align-items:center;gap:14px">
+          <div id="preview-logo" style="width:56px;height:56px;border-radius:12px;background:var(--paper);border:1.5px dashed var(--line);
+            display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:22px;color:var(--ink-faint)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <div style="flex:1">
+            <label style="display:block;font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px">Logo do cliente</label>
+            <input type="file" name="logo" accept="image/*" id="input-logo">
+          </div>
+        </div>
         <div class="grid2">
           <div class="field">
             <label>Tipo de documento</label>
@@ -574,14 +656,28 @@ async function toggleFormCliente() {
 
   const seletorProdutos = montarMultiSelect({
     containerId: 'multi-produtos',
-    opcoes: produtos.map((p) => ({ id: p.nome.toLowerCase().replace(/\s+/g, '_'), label: p.nome })),
+    opcoes: produtos.map((p) => ({ id: p.id, label: p.nome })),
+  });
+
+  let arquivoLogo = null;
+  document.getElementById('input-logo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    arquivoLogo = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById('preview-logo').innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;object-fit:cover">`;
+    };
+    reader.readAsDataURL(file);
   });
 
   document.getElementById('novo-cliente-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
     try {
-      await api('clientes', {
+      const { cliente } = await api('clientes', {
         method: 'POST',
         body: JSON.stringify({
           nome: form.nome.value,
@@ -591,15 +687,40 @@ async function toggleFormCliente() {
           segmento: form.segmento.value,
           interlocutor: form.interlocutor.value,
           telefone: form.telefone.value,
-          servicos: seletorProdutos.getSelecionados(),
+          produto_ids: seletorProdutos.getSelecionados(),
         }),
       });
+
+      if (arquivoLogo) {
+        await enviarLogo(cliente.id, arquivoLogo);
+      }
+
       toast('Cliente criado com sucesso');
       fecharModal();
       viewClientesLista();
     } catch (err) {
       toast(err.message);
+      btn.disabled = false;
     }
+  });
+}
+
+// Lê o arquivo como base64 e envia pra função que faz o upload no Storage
+function enviarLogo(clienteId, file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result.split(',')[1];
+        await api('upload-logo', {
+          method: 'POST',
+          body: JSON.stringify({ cliente_id: clienteId, filename: file.name, base64 }),
+        });
+        resolve();
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 }
 
@@ -626,7 +747,7 @@ async function viewClienteDetalhe(clienteId) {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">Cliente</div>
     <h1>${esc(cliente.nome)}</h1>
-    <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.servicos || []).join(', ')}</p>
+    <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
 
     ${usuario.role === 'admin' ? `
     <div class="card">
@@ -693,7 +814,8 @@ async function viewColaboradoresLista() {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">Cadastro</div>
     <h1>Colaborador</h1>
-    <div style="display:flex;justify-content:flex-end;margin:1.25rem 0 1rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-colaboradores', 'Buscar colaborador...')}
       ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormColaborador()">Novo colaborador</button>` : ''}
     </div>
     <div id="tabela-colaboradores" class="card"><p class="empty">Carregando...</p></div>
@@ -701,30 +823,37 @@ async function viewColaboradoresLista() {
 
   try {
     const { colaboradores } = await api('colaboradores');
-    const el = document.getElementById('tabela-colaboradores');
-    if (!colaboradores || colaboradores.length === 0) {
-      el.innerHTML = `<p class="empty">Nenhum colaborador cadastrado ainda.</p>`;
-      return;
-    }
-    el.innerHTML = `
-      <table>
-        <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Perfil</th><th>Status</th></tr></thead>
-        <tbody>
-          ${colaboradores.map((c) => `
-            <tr>
-              <td>${esc(c.nome)}</td>
-              <td>${esc(c.email)}</td>
-              <td>${esc(c.cargo) || '—'}</td>
-              <td>${c.role === 'admin' ? 'Administrador' : 'Colaborador'}</td>
-              <td><span class="pill">${c.ativo ? 'ativo' : 'inativo'}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    renderTabelaColaboradores(colaboradores || []);
+    ligarBusca('busca-colaboradores', (termo) => {
+      renderTabelaColaboradores((colaboradores || []).filter((c) => c.nome.toLowerCase().includes(termo)));
+    });
   } catch (e) {
     document.getElementById('tabela-colaboradores').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
   }
+}
+
+function renderTabelaColaboradores(colaboradores) {
+  const el = document.getElementById('tabela-colaboradores');
+  if (!colaboradores || colaboradores.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum colaborador encontrado.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Perfil</th><th>Status</th></tr></thead>
+      <tbody>
+        ${colaboradores.map((c) => `
+          <tr>
+            <td>${esc(c.nome)}</td>
+            <td>${esc(c.email)}</td>
+            <td>${esc(c.cargo) || '—'}</td>
+            <td>${c.role === 'admin' ? 'Administrador' : 'Colaborador'}</td>
+            <td><span class="pill">${c.ativo ? 'ativo' : 'inativo'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 async function toggleFormColaborador() {
@@ -801,7 +930,8 @@ async function viewProdutosLista() {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">Cadastro</div>
     <h1>Produtos</h1>
-    <div style="display:flex;justify-content:flex-end;margin:1.25rem 0 1rem">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-produtos', 'Buscar produto...')}
       ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormProduto()">Novo produto</button>` : ''}
     </div>
     <div id="tabela-produtos" class="card"><p class="empty">Carregando...</p></div>
@@ -809,28 +939,38 @@ async function viewProdutosLista() {
 
   try {
     const { produtos } = await api('produtos');
-    const el = document.getElementById('tabela-produtos');
-    if (!produtos || produtos.length === 0) {
-      el.innerHTML = `<p class="empty">Nenhum produto cadastrado ainda.</p>`;
-      return;
-    }
-    el.innerHTML = `
-      <table>
-        <thead><tr><th>Nome</th><th>Descrição</th><th>Status</th></tr></thead>
-        <tbody>
-          ${produtos.map((p) => `
-            <tr>
-              <td><strong>${esc(p.nome)}</strong></td>
-              <td class="sub">${esc(p.descricao) || '—'}</td>
-              <td><span class="pill">${p.ativo ? 'ativo' : 'inativo'}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    renderTabelaProdutos(produtos || []);
+    ligarBusca('busca-produtos', (termo) => {
+      renderTabelaProdutos((produtos || []).filter((p) => p.nome.toLowerCase().includes(termo)));
+    });
   } catch (e) {
     document.getElementById('tabela-produtos').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
   }
+}
+
+const ROTULO_CATEGORIA = { assessoria: 'Assessoria', social_media: 'Social Media' };
+
+function renderTabelaProdutos(produtos) {
+  const el = document.getElementById('tabela-produtos');
+  if (!produtos || produtos.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum produto encontrado.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Nome</th><th>Descrição</th><th>Categoria</th><th>Status</th></tr></thead>
+      <tbody>
+        ${produtos.map((p) => `
+          <tr>
+            <td><strong>${esc(p.nome)}</strong></td>
+            <td class="sub">${esc(p.descricao) || '—'}</td>
+            <td class="sub">${ROTULO_CATEGORIA[p.categoria] || '—'}</td>
+            <td><span class="pill">${p.ativo ? 'ativo' : 'inativo'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 function toggleFormProduto() {
@@ -841,6 +981,14 @@ function toggleFormProduto() {
       <form id="novo-produto-form">
         <div class="field"><label>Nome do produto</label><input name="nome" required></div>
         <div class="field"><label>Descrição</label><textarea name="descricao" rows="3"></textarea></div>
+        <div class="field">
+          <label>Categoria (usada pelos módulos de Negócios para filtrar)</label>
+          <select name="categoria">
+            <option value="">Nenhuma (não aparece em módulo filtrado)</option>
+            <option value="assessoria">Assessoria</option>
+            <option value="social_media">Social Media</option>
+          </select>
+        </div>
         <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar produto</button>
       </form>
     `,
@@ -851,7 +999,11 @@ function toggleFormProduto() {
     try {
       await api('produtos', {
         method: 'POST',
-        body: JSON.stringify({ nome: form.nome.value, descricao: form.descricao.value }),
+        body: JSON.stringify({
+          nome: form.nome.value,
+          descricao: form.descricao.value,
+          categoria: form.categoria.value || null,
+        }),
       });
       toast('Produto criado com sucesso');
       fecharModal();
@@ -865,35 +1017,25 @@ function toggleFormProduto() {
 // ============================================================================
 async function viewAssessoriaLista() {
   document.getElementById('main').innerHTML = `
-    <div class="eyebrow">Módulo</div>
+    <div class="eyebrow">Negócios</div>
     <h1>Assessoria</h1>
-    <div class="card" style="margin-top:1.25rem" id="tabela-assessoria"><p class="empty">Carregando...</p></div>
+    ${htmlBusca('busca-assessoria', 'Buscar cliente...')}
+    <div id="grade-assessoria"><p class="empty">Carregando...</p></div>
   `;
 
   try {
-    const { clientes } = await api('clientes?modulo=assessoria');
-    const el = document.getElementById('tabela-assessoria');
+    const { clientes } = await api('clientes?categoria=assessoria');
+    const el = document.getElementById('grade-assessoria');
     if (!clientes || clientes.length === 0) {
-      el.innerHTML = `<p class="empty">Nenhum cliente de Assessoria vinculado a você ainda.<br>Peça ao administrador para vincular um cliente ao seu acesso.</p>`;
+      el.innerHTML = `<div class="card"><p class="empty">Nenhum cliente de Assessoria vinculado a você ainda.<br>Peça ao administrador para vincular um cliente ao seu acesso.</p></div>`;
       return;
     }
-    el.innerHTML = `
-      <table>
-        <thead><tr><th>Cliente</th><th>Segmento</th><th>Interlocutor</th><th>Status</th></tr></thead>
-        <tbody>
-          ${clientes.map((c) => `
-            <tr class="linha" onclick="location.hash='#/assessoria/${c.id}'">
-              <td><a class="link" href="#/assessoria/${c.id}">${esc(c.nome)}</a></td>
-              <td>${esc(c.segmento) || '—'}</td>
-              <td>${esc(c.interlocutor) || '—'}</td>
-              <td><span class="pill">${esc(c.status)}</span></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    el.innerHTML = htmlGradeClientes(clientes, '#/assessoria');
+    ligarBusca('busca-assessoria', (termo) => {
+      el.innerHTML = htmlGradeClientes(clientes.filter((c) => c.nome.toLowerCase().includes(termo)), '#/assessoria');
+    });
   } catch (e) {
-    document.getElementById('tabela-assessoria').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    document.getElementById('grade-assessoria').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
   }
 }
 
