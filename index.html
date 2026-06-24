@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D2N Workspace — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#1ec8c8;--teal-dark:#0fa8a8;--teal-light:#e0faf5;
+  --navy:#1a3560;--navy-dark:#0f2240;
+  --grad:linear-gradient(135deg,#1ec8c8 0%,#1a3560 100%);
+  --ink:#0f1a2e;--ink-soft:#4a5568;--ink-faint:#a0aec0;
+  --paper:#f7f9fc;--line:#e2e8f0;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.wrap{width:100%;max-width:380px;padding:1.5rem}
+.logo-row{display:flex;flex-direction:column;align-items:center;margin-bottom:2rem}
+.logo-row img{width:64px;height:64px;border-radius:14px;margin-bottom:1rem}
+.logo-row h1{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.03em}
+.logo-row p{font-size:13px;color:var(--ink-faint);margin-top:4px}
+.card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:8px;padding:2rem}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+.field input{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:4px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);outline:none}
+.field input:focus{border-color:var(--teal)}
+.btn{width:100%;margin-top:.5rem;padding:13px;border:none;border-radius:4px;background:var(--grad);color:#fff;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.erro{font-size:12px;color:#e53e3e;margin:6px 0 0}
+.rodape{text-align:center;font-size:12px;color:var(--ink-faint);margin-top:1.5rem;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo-row">
+    <img src="logo-icon.png" alt="D2N Carreira e Negócios">
+    <h1>D2N Workspace</h1>
+    <p>Plataforma interna D2N Carreira e Negócios</p>
+  </div>
+  <div class="card">
+    <form id="form-login">
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" id="email" required placeholder="seu@email.com" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="senha" required placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <p class="erro" id="erro" style="display:none"></p>
+      <button class="btn" id="btn-entrar" type="submit">Entrar</button>
+    </form>
+  </div>
+  <p class="rodape">
+    Acesso restrito a colaboradores e clientes D2N.<br>
+    Esqueceu a senha? Fale com o administrador.
+  </p>
+</div>
+
+<script>
+// Se já tiver um token salvo, vai direto pro sistema
+if (localStorage.getItem('d2n_token')) {
+  window.location.href = 'app.html';
+}
+
+document.getElementById('form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btn-entrar');
+  const erroEl = document.getElementById('erro');
+  erroEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+
+  try {
+    const resp = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        password: document.getElementById('senha').value,
+      }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      erroEl.textContent = data.erro || 'Não foi possível entrar.';
+      erroEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      return;
+    }
+
+    localStorage.setItem('d2n_token', data.access_token);
+    localStorage.setItem('d2n_refresh', data.refresh_token);
+    localStorage.setItem('d2n_usuario', JSON.stringify(data.usuario));
+    window.location.href = 'app.html';
+  } catch (err) {
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+    erroEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+});
+</script>
+</body>
+</html>
