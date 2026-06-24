@@ -59,8 +59,10 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 </div>
 
 <script>
-// Se já tiver um token salvo, vai direto pro sistema
-if (localStorage.getItem('d2n_token')) {
+// Se já tiver um token E um perfil válido salvos, vai direto pro sistema
+const tokenSalvo = localStorage.getItem('d2n_token');
+const usuarioSalvo = localStorage.getItem('d2n_usuario');
+if (tokenSalvo && usuarioSalvo && usuarioSalvo !== 'null') {
   window.location.href = 'app.html';
 }
 
