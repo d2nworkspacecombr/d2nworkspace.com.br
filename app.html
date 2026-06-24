@@ -112,6 +112,24 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
   font-family:'Sora',sans-serif;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.22);display:none;z-index:999}
 .hidden{display:none !important}
 
+/* RESPONSIVO — telas estreitas viram menu retrátil */
+.mobile-bar{display:none}
+.backdrop-mobile{display:none}
+@media (max-width: 880px){
+  .mobile-bar{display:flex;align-items:center;gap:12px;height:54px;padding:0 1.2rem;background:#fff;border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:60}
+  .mobile-bar button{background:var(--paper);border:none;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;color:var(--navy-700);flex-shrink:0}
+  .mobile-bar button svg{width:18px;height:18px}
+  .mobile-bar img{width:26px;height:26px;border-radius:6px}
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;z-index:1100}
+  .sidebar.aberta{transform:translateX(0)}
+  .main{margin-left:0;padding:1.5rem 1.2rem;max-width:100%}
+  .backdrop-mobile.show{display:block;position:fixed;inset:0;background:rgba(8,16,30,.45);z-index:1050}
+  table{min-width:560px}
+  .card{overflow-x:auto}
+}
+
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(8,16,30,.6);backdrop-filter:blur(2px);display:flex;align-items:center;
   justify-content:center;z-index:1000;padding:1.5rem;animation:fadeIn .15s ease}
@@ -149,8 +167,17 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 </head>
 <body>
 
+<div class="mobile-bar">
+  <button onclick="toggleMenuMobile()" aria-label="Abrir menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <img src="logo-icon.png" alt="D2N">
+  <span class="brand-word" style="font-size:14px">Workspace</span>
+</div>
+<div class="backdrop-mobile" id="backdrop-mobile" onclick="toggleMenuMobile()"></div>
+
 <div class="app">
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-head">
       <img src="logo-icon.png" alt="D2N">
       <div>
@@ -174,6 +201,7 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 </div>
 
 <div class="toast" id="toast"></div>
+
 
 <div class="modal-overlay hidden" id="modal-overlay" onclick="if(event.target===this) fecharModal()">
   <div class="modal-card" id="modal-card"></div>
@@ -206,6 +234,11 @@ function sair() {
   localStorage.removeItem('d2n_refresh');
   localStorage.removeItem('d2n_usuario');
   window.location.href = 'index.html';
+}
+
+function toggleMenuMobile() {
+  document.getElementById('sidebar').classList.toggle('aberta');
+  document.getElementById('backdrop-mobile').classList.toggle('show');
 }
 
 // Chamada padrão pra qualquer endpoint da API, já com o token incluído
@@ -368,7 +401,11 @@ const NAV_GRUPOS = [
 
 function renderNav() {
   const atual = location.hash || '#/';
-  document.getElementById('nav').innerHTML = NAV_GRUPOS.map((grupo) => `
+  const grupos = usuario.role === 'admin'
+    ? NAV_GRUPOS
+    : NAV_GRUPOS.filter((g) => g.titulo !== 'Cadastro');
+
+  document.getElementById('nav').innerHTML = grupos.map((grupo) => `
     <div class="nav-grupo-titulo">${grupo.titulo}</div>
     ${grupo.itens.map((r) => {
       if (r.em_breve) {
@@ -395,8 +432,15 @@ window.addEventListener('DOMContentLoaded', rotear);
 
 function rotear() {
   renderNav();
+  document.getElementById('sidebar').classList.remove('aberta');
+  document.getElementById('backdrop-mobile').classList.remove('show');
   const hash = location.hash || '#/';
   const partes = hash.replace('#/', '').split('/').filter(Boolean);
+
+  const SOMENTE_ADMIN = ['clientes', 'colaboradores', 'produtos'];
+  if (SOMENTE_ADMIN.includes(partes[0]) && usuario.role !== 'admin') {
+    return viewAcessoNegado();
+  }
 
   if (partes[0] === 'assessoria' && partes[1]) {
     return viewAssessoriaDetalhe(partes[1]);
@@ -409,6 +453,14 @@ function rotear() {
   if (partes[0] === 'briefing') return viewEmConstrucao('Briefing do cliente');
   if (partes[0] === 'diagnostico') return viewEmConstrucao('Diagnóstico');
   return viewInicio();
+}
+
+function viewAcessoNegado() {
+  document.getElementById('main').innerHTML = `
+    <div class="card" style="margin-top:2rem">
+      <p class="empty">Esse cadastro é restrito ao Administrador.</p>
+    </div>
+  `;
 }
 
 // ============================================================================
