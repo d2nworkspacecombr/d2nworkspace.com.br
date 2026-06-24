@@ -111,6 +111,40 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .toast{position:fixed;bottom:26px;right:26px;background:var(--navy-800);color:#fff;padding:13px 22px;border-radius:var(--r-sm);
   font-family:'Sora',sans-serif;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.22);display:none;z-index:999}
 .hidden{display:none !important}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,16,30,.6);backdrop-filter:blur(2px);display:flex;align-items:center;
+  justify-content:center;z-index:1000;padding:1.5rem;animation:fadeIn .15s ease}
+.modal-card{background:#fff;border-radius:18px;max-width:580px;width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:0 28px 64px rgba(8,16,30,.4);animation:slideUp .18s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;padding:1.6rem 1.7rem 0}
+.modal-head .eyebrow{margin-bottom:.3rem}
+.modal-head h2{font-family:'Sora',sans-serif;font-size:19px;font-weight:700;color:var(--navy-700);letter-spacing:-.01em}
+.modal-head .modal-sub{font-size:12px;color:var(--ink-faint);margin-top:2px}
+.modal-close{background:var(--paper);border:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;color:var(--ink-soft);flex-shrink:0;transition:background .15s}
+.modal-close:hover{background:var(--line)}
+.modal-close svg{width:15px;height:15px}
+.modal-body{padding:1.4rem 1.7rem 1.8rem}
+
+/* MULTI-SELECT COM CHIPS */
+.multi-select{border:1.5px solid var(--line);border-radius:var(--r-sm);padding:9px 10px;position:relative;background:var(--paper)}
+.multi-select.foco{border-color:var(--navy-600);background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chips:empty{margin-bottom:0}
+.chip{display:flex;align-items:center;gap:6px;background:var(--teal-soft);color:var(--navy-700);font-family:'Sora',sans-serif;
+  font-size:11.5px;font-weight:600;padding:5px 6px 5px 11px;border-radius:20px}
+.chip button{background:rgba(21,48,92,.12);border:none;color:var(--navy-700);cursor:pointer;width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;padding:0}
+.multi-select input{border:none;background:transparent;width:100%;font-family:'Barlow',sans-serif;font-size:13.5px;padding:3px 2px;outline:none}
+.multi-dropdown{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:10px;
+  max-height:190px;overflow-y:auto;box-shadow:var(--shadow-md);z-index:10;display:none}
+.multi-dropdown.show{display:block}
+.multi-dropdown .opcao{padding:9px 13px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.multi-dropdown .opcao:hover{background:var(--paper)}
+.multi-dropdown .opcao-vazia{padding:12px 13px;font-size:12.5px;color:var(--ink-faint)}
 </style>
 </head>
 <body>
@@ -140,6 +174,10 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="if(event.target===this) fecharModal()">
+  <div class="modal-card" id="modal-card"></div>
+</div>
 
 <script>
 // ============================================================================
@@ -196,6 +234,101 @@ function toast(msg) {
   el.textContent = msg;
   el.style.display = 'block';
   setTimeout(() => (el.style.display = 'none'), 2500);
+}
+
+// ============================================================================
+// MODAL — abre um card elegante centralizado, com cabeçalho padronizado
+// ============================================================================
+function abrirModal({ eyebrow, titulo, subtitulo, corpoHtml }) {
+  document.getElementById('modal-card').innerHTML = `
+    <div class="modal-head">
+      <div>
+        ${eyebrow ? `<div class="eyebrow">${esc(eyebrow)}</div>` : ''}
+        <h2>${esc(titulo)}</h2>
+        ${subtitulo ? `<div class="modal-sub">${esc(subtitulo)}</div>` : ''}
+      </div>
+      <button class="modal-close" onclick="fecharModal()" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">${corpoHtml}</div>
+  `;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function fecharModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-card').innerHTML = '';
+}
+
+// ============================================================================
+// SELETOR COM CHIPS — busca + seleciona itens de uma lista, mostrando
+// "pílulas" removíveis em vez de uma grade de checkboxes.
+// ============================================================================
+function montarMultiSelect({ containerId, opcoes, selecionadosIniciais = [] }) {
+  const container = document.getElementById(containerId);
+  const selecionados = new Set(selecionadosIniciais);
+
+  function opcaoPorId(id) {
+    return opcoes.find((o) => o.id === id);
+  }
+
+  function renderChips() {
+    const chipsEl = container.querySelector('.chips');
+    chipsEl.innerHTML = [...selecionados].map((id) => {
+      const o = opcaoPorId(id);
+      return `<span class="chip">${esc(o ? o.label : id)}<button type="button" data-remover="${id}">&times;</button></span>`;
+    }).join('');
+    chipsEl.querySelectorAll('[data-remover]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selecionados.delete(btn.dataset.remover);
+        renderChips();
+      });
+    });
+  }
+
+  function renderDropdown(filtro) {
+    const dropdown = container.querySelector('.multi-dropdown');
+    const disponiveis = opcoes.filter((o) =>
+      !selecionados.has(o.id) && o.label.toLowerCase().includes(filtro.toLowerCase())
+    );
+    if (disponiveis.length === 0) {
+      dropdown.innerHTML = `<div class="opcao-vazia">Nenhum resultado</div>`;
+    } else {
+      dropdown.innerHTML = disponiveis.map((o) =>
+        `<div class="opcao" data-id="${o.id}">${esc(o.label)}</div>`
+      ).join('');
+      dropdown.querySelectorAll('.opcao').forEach((el) => {
+        el.addEventListener('click', () => {
+          selecionados.add(el.dataset.id);
+          input.value = '';
+          renderChips();
+          renderDropdown('');
+          input.focus();
+        });
+      });
+    }
+  }
+
+  const input = container.querySelector('input');
+  const dropdown = container.querySelector('.multi-dropdown');
+
+  input.addEventListener('focus', () => {
+    container.classList.add('foco');
+    dropdown.classList.add('show');
+    renderDropdown(input.value);
+  });
+  input.addEventListener('input', () => renderDropdown(input.value));
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      container.classList.remove('foco');
+      dropdown.classList.remove('show');
+    }, 150);
+  });
+
+  renderChips();
+
+  return { getSelecionados: () => [...selecionados] };
 }
 
 function esc(s) {
@@ -311,7 +444,6 @@ async function viewClientesLista() {
     <div style="display:flex;justify-content:flex-end;margin:1.25rem 0 1rem">
       ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormCliente()">Novo cliente</button>` : ''}
     </div>
-    <div id="form-cliente-wrap"></div>
     <div id="tabela-clientes" class="card"><p class="empty">Carregando...</p></div>
   `;
 
@@ -346,20 +478,15 @@ function renderTabelaClientes(clientes) {
   `;
 }
 
-function toggleFormCliente() {
-  const wrap = document.getElementById('form-cliente-wrap');
-  if (wrap.innerHTML.trim() !== '') { wrap.innerHTML = ''; return; }
+async function toggleFormCliente() {
+  let produtos = [];
+  try { ({ produtos } = await api('produtos')); } catch (e) { /* segue sem a lista se falhar */ }
 
-  const SERVICOS = [
-    ['assessoria', 'Assessoria Estratégica'],
-    ['marketing', 'Marketing de Redes Sociais'],
-    ['comercial', 'Assessoria Comercial'],
-    ['trafego_pago', 'Tráfego Pago'],
-    ['big_bang', 'Big Bang da Marca'],
-  ];
-
-  wrap.innerHTML = `
-    <div class="card" style="margin-bottom:1.25rem">
+  abrirModal({
+    eyebrow: 'Cadastro',
+    titulo: 'Novo cliente',
+    subtitulo: 'Os dados de Nome Fantasia aparecem nos documentos do sistema.',
+    corpoHtml: `
       <form id="novo-cliente-form">
         <div class="grid2">
           <div class="field">
@@ -381,22 +508,26 @@ function toggleFormCliente() {
         </div>
         <div class="field"><label>Telefone</label><input name="telefone"></div>
         <div class="field">
-          <label>Serviços contratados</label>
-          <div class="checks">
-            ${SERVICOS.map(([id, label]) => `
-              <label><input type="checkbox" name="servicos" value="${id}"> ${label}</label>
-            `).join('')}
+          <label>Produtos contratados</label>
+          <div class="multi-select" id="multi-produtos">
+            <div class="chips"></div>
+            <input type="text" placeholder="Buscar produto...">
+            <div class="multi-dropdown"></div>
           </div>
         </div>
-        <button class="btn btn-navy" type="submit">Salvar cliente</button>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar cliente</button>
       </form>
-    </div>
-  `;
+    `,
+  });
+
+  const seletorProdutos = montarMultiSelect({
+    containerId: 'multi-produtos',
+    opcoes: produtos.map((p) => ({ id: p.nome.toLowerCase().replace(/\s+/g, '_'), label: p.nome })),
+  });
 
   document.getElementById('novo-cliente-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
-    const servicos = [...form.querySelectorAll('[name="servicos"]:checked')].map((c) => c.value);
     try {
       await api('clientes', {
         method: 'POST',
@@ -408,11 +539,11 @@ function toggleFormCliente() {
           segmento: form.segmento.value,
           interlocutor: form.interlocutor.value,
           telefone: form.telefone.value,
-          servicos,
+          servicos: seletorProdutos.getSelecionados(),
         }),
       });
       toast('Cliente criado com sucesso');
-      wrap.innerHTML = '';
+      fecharModal();
       viewClientesLista();
     } catch (err) {
       toast(err.message);
@@ -513,7 +644,6 @@ async function viewColaboradoresLista() {
     <div style="display:flex;justify-content:flex-end;margin:1.25rem 0 1rem">
       ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormColaborador()">Novo colaborador</button>` : ''}
     </div>
-    <div id="form-colaborador-wrap"></div>
     <div id="tabela-colaboradores" class="card"><p class="empty">Carregando...</p></div>
   `;
 
@@ -546,16 +676,14 @@ async function viewColaboradoresLista() {
 }
 
 async function toggleFormColaborador() {
-  const wrap = document.getElementById('form-colaborador-wrap');
-  if (wrap.innerHTML.trim() !== '') { wrap.innerHTML = ''; return; }
-
   let clientes = [];
-  try {
-    ({ clientes } = await api('clientes'));
-  } catch (e) { /* segue sem a lista se falhar */ }
+  try { ({ clientes } = await api('clientes')); } catch (e) { /* segue sem a lista se falhar */ }
 
-  wrap.innerHTML = `
-    <div class="card" style="margin-bottom:1.25rem">
+  abrirModal({
+    eyebrow: 'Cadastro',
+    titulo: 'Novo colaborador',
+    subtitulo: 'Cria o login e já define quais clientes ele acompanha.',
+    corpoHtml: `
       <form id="novo-colaborador-form">
         <div class="grid2">
           <div class="field"><label>Nome completo</label><input name="nome" required></div>
@@ -574,22 +702,25 @@ async function toggleFormColaborador() {
         </div>
         <div class="field">
           <label>Vincular clientes (responsabilidade)</label>
-          <div class="checks" style="max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:10px">
-            ${clientes.length === 0 ? '<span class="sub">Nenhum cliente cadastrado ainda.</span>' :
-              clientes.map((c) => `
-                <label><input type="checkbox" name="cliente_ids" value="${c.id}"> ${esc(c.nome)}</label>
-              `).join('')}
+          <div class="multi-select" id="multi-clientes-colab">
+            <div class="chips"></div>
+            <input type="text" placeholder="Buscar cliente...">
+            <div class="multi-dropdown"></div>
           </div>
         </div>
-        <button class="btn btn-navy" type="submit">Criar colaborador</button>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar colaborador</button>
       </form>
-    </div>
-  `;
+    `,
+  });
+
+  const seletorClientes = montarMultiSelect({
+    containerId: 'multi-clientes-colab',
+    opcoes: clientes.map((c) => ({ id: c.id, label: c.nome })),
+  });
 
   document.getElementById('novo-colaborador-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
-    const cliente_ids = [...form.querySelectorAll('[name="cliente_ids"]:checked')].map((c) => c.value);
     try {
       await api('colaboradores-criar', {
         method: 'POST',
@@ -599,11 +730,11 @@ async function toggleFormColaborador() {
           password: form.password.value,
           role: form.role.value,
           cargo: form.cargo.value,
-          cliente_ids,
+          cliente_ids: seletorClientes.getSelecionados(),
         }),
       });
       toast('Colaborador criado com sucesso');
-      wrap.innerHTML = '';
+      fecharModal();
       viewColaboradoresLista();
     } catch (err) {
       toast(err.message);
@@ -621,7 +752,6 @@ async function viewProdutosLista() {
     <div style="display:flex;justify-content:flex-end;margin:1.25rem 0 1rem">
       ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormProduto()">Novo produto</button>` : ''}
     </div>
-    <div id="form-produto-wrap"></div>
     <div id="tabela-produtos" class="card"><p class="empty">Carregando...</p></div>
   `;
 
@@ -652,17 +782,17 @@ async function viewProdutosLista() {
 }
 
 function toggleFormProduto() {
-  const wrap = document.getElementById('form-produto-wrap');
-  if (wrap.innerHTML.trim() !== '') { wrap.innerHTML = ''; return; }
-  wrap.innerHTML = `
-    <div class="card" style="margin-bottom:1.25rem">
+  abrirModal({
+    eyebrow: 'Cadastro',
+    titulo: 'Novo produto',
+    corpoHtml: `
       <form id="novo-produto-form">
         <div class="field"><label>Nome do produto</label><input name="nome" required></div>
-        <div class="field"><label>Descrição</label><textarea name="descricao" rows="2"></textarea></div>
-        <button class="btn btn-navy" type="submit">Salvar produto</button>
+        <div class="field"><label>Descrição</label><textarea name="descricao" rows="3"></textarea></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar produto</button>
       </form>
-    </div>
-  `;
+    `,
+  });
   document.getElementById('novo-produto-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -672,7 +802,7 @@ function toggleFormProduto() {
         body: JSON.stringify({ nome: form.nome.value, descricao: form.descricao.value }),
       });
       toast('Produto criado com sucesso');
-      wrap.innerHTML = '';
+      fecharModal();
       viewProdutosLista();
     } catch (err) { toast(err.message); }
   });
@@ -774,13 +904,12 @@ async function renderAbaSessoes(clienteId, el) {
     <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
       <button class="btn btn-grad" onclick="toggleFormSessao('${clienteId}')">Nova sessão</button>
     </div>
-    <div id="form-sessao-wrap"></div>
     <div id="lista-sessoes">
       ${(!sessoes || sessoes.length === 0) ? `<div class="card"><p class="empty">Nenhuma sessão registrada ainda.</p></div>` :
         sessoes.map((s) => `
           <div class="card" style="margin-bottom:.75rem">
             <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-              <strong style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:var(--navy)">${esc(s.titulo)}</strong>
+              <strong style="font-family:'Sora',sans-serif;color:var(--navy)">${esc(s.titulo)}</strong>
               <span class="sub">${new Date(s.data_sessao + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
             </div>
             ${s.pauta ? `<p class="sub"><strong>Pauta:</strong> ${esc(s.pauta)}</p>` : ''}
@@ -793,10 +922,10 @@ async function renderAbaSessoes(clienteId, el) {
 }
 
 function toggleFormSessao(clienteId) {
-  const wrap = document.getElementById('form-sessao-wrap');
-  if (wrap.innerHTML.trim() !== '') { wrap.innerHTML = ''; return; }
-  wrap.innerHTML = `
-    <div class="card" style="margin-bottom:1rem">
+  abrirModal({
+    eyebrow: 'Assessoria',
+    titulo: 'Nova sessão de atendimento',
+    corpoHtml: `
       <form id="form-nova-sessao">
         <div class="grid2">
           <div class="field"><label>Título</label><input name="titulo" required></div>
@@ -805,10 +934,10 @@ function toggleFormSessao(clienteId) {
         <div class="field"><label>Pauta</label><textarea name="pauta" rows="2"></textarea></div>
         <div class="field"><label>Resumo da sessão</label><textarea name="resumo" rows="2"></textarea></div>
         <div class="field"><label>Encaminhamentos</label><textarea name="encaminhamentos" rows="2"></textarea></div>
-        <button class="btn btn-navy" type="submit">Salvar sessão</button>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar sessão</button>
       </form>
-    </div>
-  `;
+    `,
+  });
   document.getElementById('form-nova-sessao').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target;
@@ -825,6 +954,7 @@ function toggleFormSessao(clienteId) {
         }),
       });
       toast('Sessão salva');
+      fecharModal();
       renderAba(clienteId);
     } catch (err) { toast(err.message); }
   });
@@ -878,7 +1008,6 @@ async function renderAbaOkrs(clienteId, el) {
     <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
       <button class="btn btn-grad" onclick="toggleFormOkr('${clienteId}')">Novo OKR</button>
     </div>
-    <div id="form-okr-wrap"></div>
     <div id="lista-okrs">
       ${(!okrs || okrs.length === 0) ? `<div class="card"><p class="empty">Nenhum OKR cadastrado ainda.</p></div>` :
         okrs.map((o) => `
@@ -899,10 +1028,10 @@ async function renderAbaOkrs(clienteId, el) {
 }
 
 function toggleFormOkr(clienteId) {
-  const wrap = document.getElementById('form-okr-wrap');
-  if (wrap.innerHTML.trim() !== '') { wrap.innerHTML = ''; return; }
-  wrap.innerHTML = `
-    <div class="card" style="margin-bottom:1rem">
+  abrirModal({
+    eyebrow: 'Assessoria',
+    titulo: 'Novo OKR',
+    corpoHtml: `
       <form id="form-novo-okr">
         <div class="field"><label>Objetivo</label><input name="objetivo" required></div>
         <div class="field"><label>Resultado-chave</label><input name="resultado_chave" required></div>
@@ -910,10 +1039,10 @@ function toggleFormOkr(clienteId) {
           <div class="field"><label>Progresso inicial (%)</label><input type="number" name="progresso" min="0" max="100" value="0"></div>
           <div class="field"><label>Prazo</label><input type="date" name="prazo"></div>
         </div>
-        <button class="btn btn-navy" type="submit">Salvar OKR</button>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar OKR</button>
       </form>
-    </div>
-  `;
+    `,
+  });
   document.getElementById('form-novo-okr').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target;
@@ -929,6 +1058,7 @@ function toggleFormOkr(clienteId) {
         }),
       });
       toast('OKR salvo');
+      fecharModal();
       renderAba(clienteId);
     } catch (err) { toast(err.message); }
   });
