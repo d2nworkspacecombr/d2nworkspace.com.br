@@ -297,7 +297,10 @@ async function api(path, options = {}, _tentativaRenovada = false) {
     },
   });
 
-  if (resp.status === 401 && !_tentativaRenovada) {
+  const tokenExpirou = resp.status === 401 ||
+    (!resp.ok && (await resp.clone().json().catch(() => ({}))).erro?.toLowerCase().includes('jwt'));
+
+  if (tokenExpirou && !_tentativaRenovada) {
     const renovou = await renovarSessao();
     if (renovou) return api(path, options, true);
     sair();
