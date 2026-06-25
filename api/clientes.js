@@ -74,6 +74,13 @@ module.exports = async (req, res) => {
       await supabase.from("cliente_produto").insert(vinculos);
     }
 
+    if (body.diagnostico_externo_id) {
+      await supabase
+        .from("diagnosticos")
+        .update({ cliente_id: cliente.id })
+        .eq("id", body.diagnostico_externo_id);
+    }
+
     return res.status(201).json({ cliente });
   }
 
