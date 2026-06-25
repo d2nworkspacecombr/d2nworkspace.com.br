@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D2N Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Azul-marinho como cor dominante; teal reservado como toque de destaque */
+  --navy-900:#0a1628;--navy-800:#0f1f3a;--navy-700:#15305c;--navy-600:#1d3f74;
+  --teal:#22d3d3;--teal-deep:#0fa8a8;--teal-soft:#e3fbfb;
+  --grad-navy:linear-gradient(135deg,var(--navy-600) 0%,var(--navy-900) 100%);
+  --grad-accent:linear-gradient(135deg,var(--teal) 0%,var(--navy-700) 100%);
+  --ink:#0e1626;--ink-soft:#5a6478;--ink-faint:#99a2b6;
+  --paper:#f5f6fa;--surface:#fff;--line:#e9ebf1;
+  --shadow-sm:0 1px 2px rgba(14,22,38,.04),0 1px 1px rgba(14,22,38,.03);
+  --shadow-md:0 6px 20px rgba(14,22,38,.08),0 2px 5px rgba(14,22,38,.04);
+  --r-sm:8px;--r-md:12px;--r-lg:16px;
+  /* compatibilidade com nomes de cor usados em outras partes do código */
+  --navy:var(--navy-700);--navy-dark:var(--navy-800);--teal-dark:var(--teal-deep);--teal-light:var(--teal-soft);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:252px;flex-shrink:0;background:linear-gradient(195deg,var(--navy-900) 0%,#081222 100%);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;box-shadow:2px 0 24px rgba(0,0,0,.2)}
+.sidebar-head{display:flex;align-items:center;gap:11px;padding:1.7rem 1.5rem 1.4rem}
+.sidebar-head img{width:34px;height:34px;border-radius:9px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.brand-word{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:.04em;text-transform:uppercase;
+  background:linear-gradient(120deg,var(--teal) 0%,#6fa8d8 55%,#a9b8d8 100%);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;display:block;line-height:1.1}
+.sidebar-head small{display:block;font-size:9.5px;letter-spacing:.1em;color:#5b7da3;text-transform:uppercase;font-weight:600;margin-top:2px}
+
+.nav{flex:1;padding:.6rem .9rem;overflow-y:auto}
+.nav-grupo-titulo{font-family:'Sora',sans-serif;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#3f5a82;padding:16px 14px 7px}
+.nav-grupo-titulo:first-child{padding-top:6px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 14px;margin-bottom:2px;border-radius:var(--r-sm);
+  font-family:'Sora',sans-serif;font-size:13px;font-weight:500;color:#9fb0c9;text-decoration:none;transition:background .15s,color .15s}
+.nav a svg{width:16.5px;height:16.5px;flex-shrink:0;opacity:.85;transition:color .15s}
+.nav a:hover{background:rgba(255,255,255,.05);color:#e3e9f3}
+.nav a.active{background:var(--teal);color:var(--navy-900);font-weight:600}
+.nav a.active svg{color:var(--navy-900);opacity:1}
+.nav-em-breve{display:flex;align-items:center;gap:11px;padding:9px 14px;font-family:'Sora',sans-serif;font-size:13px;font-weight:500;color:#445873;cursor:default}
+.nav-em-breve svg{width:16.5px;height:16.5px;flex-shrink:0;opacity:.5}
+.nav-em-breve em{margin-left:auto;font-style:normal;font-size:9px;background:rgba(255,255,255,.06);color:#6b85a8;padding:2px 7px;border-radius:20px;font-weight:600;letter-spacing:.03em}
+
+.sidebar-foot{padding:1.1rem 1.2rem 1.3rem;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
+.avatar{width:33px;height:33px;border-radius:50%;background:var(--grad-accent);display:flex;align-items:center;justify-content:center;
+  font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;color:#fff;flex-shrink:0;text-transform:uppercase}
+.sidebar-foot .quem{flex:1;min-width:0}
+.sidebar-foot .nome{font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-foot .cargo{font-size:10.5px;color:#5b7da3;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+.sidebar-foot button{background:rgba(255,255,255,.06);border:none;color:#9fb0c9;width:30px;height:30px;border-radius:var(--r-sm);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
+.sidebar-foot button:hover{background:rgba(255,255,255,.12);color:#fff}
+.sidebar-foot button svg{width:14.5px;height:14.5px}
+
+/* MAIN */
+.main{flex:1;margin-left:252px;padding:3rem 3.5rem}
+.eyebrow{font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-deep);margin-bottom:.55rem}
+h1{font-family:'Sora',sans-serif;font-size:27px;font-weight:700;color:var(--navy-700);letter-spacing:-.012em;margin-bottom:.3rem}
+.sub{font-size:12.5px;color:var(--ink-faint)}
+
+/* BOTÕES */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:none;border-radius:var(--r-sm);font-family:'Sora',sans-serif;
+  font-size:12.5px;font-weight:600;letter-spacing:0;cursor:pointer;transition:transform .12s,box-shadow .15s,opacity .15s}
+.btn-grad{background:var(--grad-navy);color:#fff;box-shadow:0 2px 10px rgba(10,22,40,.22)}
+.btn-grad:hover{box-shadow:0 5px 16px rgba(10,22,40,.32);transform:translateY(-1px)}
+.btn-navy{background:var(--navy-700);color:#fff}
+.btn-navy:hover{background:var(--navy-800)}
+.btn-outline{background:transparent;border:1.5px solid var(--line);color:var(--navy-700)}
+.btn-outline:hover{border-color:var(--navy-600)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+
+/* CARDS / TABELA */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:1.6rem;box-shadow:var(--shadow-sm)}
+.empty{text-align:center;padding:3.2rem;color:var(--ink-faint);font-size:13px;line-height:1.7}
+table{width:100%;border-collapse:collapse}
+th{font-family:'Sora',sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);font-weight:600;text-align:left;padding:12px 16px;border-bottom:1px solid var(--line)}
+td{padding:14px 16px;font-size:13.5px;border-bottom:1px solid var(--line)}
+tr.linha{transition:background .12s}
+tr.linha:hover td{background:var(--paper);cursor:pointer}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:20px;font-family:'Sora',sans-serif;
+  font-size:10.5px;font-weight:600;letter-spacing:.02em;background:var(--paper);color:var(--navy-700);border:1px solid var(--line)}
+.pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.link{color:var(--navy-700);font-weight:600;text-decoration:none}
+.link:hover{color:var(--teal-deep)}
+
+/* FORM */
+.field{margin-bottom:1.05rem}
+.field label{display:block;font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;padding:10px 13px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-family:'Barlow',sans-serif;font-size:14px;background:var(--paper);outline:none;transition:border-color .15s,background .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--navy-600);background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.checks{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-soft)}
+
+/* TABS */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:1.6rem}
+.tab{padding:10px 16px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--ink-faint);border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;margin-bottom:-1px;transition:color .15s}
+.tab.active{color:var(--navy-700);border-bottom-color:var(--teal)}
+
+/* PROGRESS */
+.prog-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.prog-track{flex:1;height:6px;background:var(--paper);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--grad-accent)}
+.prog-input{width:58px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:'Sora',sans-serif}
+
+.toast{position:fixed;bottom:26px;right:26px;background:var(--navy-800);color:#fff;padding:13px 22px;border-radius:var(--r-sm);
+  font-family:'Sora',sans-serif;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.22);display:none;z-index:999}
+.hidden{display:none !important}
+
+/* RESPONSIVO — telas estreitas viram menu retrátil */
+.mobile-bar{display:none}
+.backdrop-mobile{display:none}
+@media (max-width: 880px){
+  .mobile-bar{display:flex;align-items:center;gap:12px;height:54px;padding:0 1.2rem;background:#fff;border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:60}
+  .mobile-bar button{background:var(--paper);border:none;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;color:var(--navy-700);flex-shrink:0}
+  .mobile-bar button svg{width:18px;height:18px}
+  .mobile-bar img{width:26px;height:26px;border-radius:6px}
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;z-index:1100}
+  .sidebar.aberta{transform:translateX(0)}
+  .main{margin-left:0;padding:1.5rem 1.2rem;max-width:100%}
+  .backdrop-mobile.show{display:block;position:fixed;inset:0;background:rgba(8,16,30,.45);z-index:1050}
+  table{min-width:560px}
+  .card{overflow-x:auto}
+}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,16,30,.6);backdrop-filter:blur(2px);display:flex;align-items:center;
+  justify-content:center;z-index:1000;padding:1.5rem;animation:fadeIn .15s ease}
+.modal-card{background:#fff;border-radius:18px;max-width:580px;width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:0 28px 64px rgba(8,16,30,.4);animation:slideUp .18s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;padding:1.6rem 1.7rem 0}
+.modal-head .eyebrow{margin-bottom:.3rem}
+.modal-head h2{font-family:'Sora',sans-serif;font-size:19px;font-weight:700;color:var(--navy-700);letter-spacing:-.01em}
+.modal-head .modal-sub{font-size:12px;color:var(--ink-faint);margin-top:2px}
+.modal-close{background:var(--paper);border:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;color:var(--ink-soft);flex-shrink:0;transition:background .15s}
+.modal-close:hover{background:var(--line)}
+.modal-close svg{width:15px;height:15px}
+.modal-body{padding:1.4rem 1.7rem 1.8rem}
+
+/* MULTI-SELECT COM CHIPS */
+.multi-select{border:1.5px solid var(--line);border-radius:var(--r-sm);padding:9px 10px;position:relative;background:var(--paper)}
+.multi-select.foco{border-color:var(--navy-600);background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chips:empty{margin-bottom:0}
+.chip{display:flex;align-items:center;gap:6px;background:var(--teal-soft);color:var(--navy-700);font-family:'Sora',sans-serif;
+  font-size:11.5px;font-weight:600;padding:5px 6px 5px 11px;border-radius:20px}
+.chip button{background:rgba(21,48,92,.12);border:none;color:var(--navy-700);cursor:pointer;width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;padding:0}
+.multi-select input{border:none;background:transparent;width:100%;font-family:'Barlow',sans-serif;font-size:13.5px;padding:3px 2px;outline:none}
+.multi-dropdown{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--line);border-radius:10px;
+  max-height:190px;overflow-y:auto;box-shadow:var(--shadow-md);z-index:10;display:none}
+.multi-dropdown.show{display:block}
+.multi-dropdown .opcao{padding:9px 13px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.multi-dropdown .opcao:hover{background:var(--paper)}
+.multi-dropdown .opcao-vazia{padding:12px 13px;font-size:12.5px;color:var(--ink-faint)}
+
+/* BUSCA */
+.busca-wrap{position:relative;margin-bottom:1.1rem;max-width:340px}
+.busca-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ink-faint)}
+.busca-wrap input{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+  font-family:'Barlow',sans-serif;font-size:13.5px;background:#fff;outline:none;transition:border-color .15s}
+.busca-wrap input:focus{border-color:var(--navy-600)}
+
+/* GRADE DE CARDS DE CLIENTE */
+.grade-clientes{display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:14px}
+.card-cliente{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:1.2rem;cursor:pointer;
+  box-shadow:var(--shadow-sm);transition:box-shadow .15s,transform .12s}
+.card-cliente:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.card-cliente .topo{display:flex;align-items:center;gap:11px;margin-bottom:.9rem}
+.card-cliente .logo{width:42px;height:42px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--paper)}
+.card-cliente .logo-fallback{width:42px;height:42px;border-radius:10px;flex-shrink:0;background:var(--grad-accent);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Sora',sans-serif;font-weight:600;font-size:14px;text-transform:uppercase}
+.card-cliente .nome-cliente{font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:var(--navy-700);line-height:1.3}
+.card-cliente .segmento-cliente{font-size:11.5px;color:var(--ink-faint);margin-top:1px}
+.card-cliente .rodape-card{display:flex;justify-content:space-between;align-items:center;margin-top:.4rem}
+</style>
+</head>
+<body>
+
+<div class="mobile-bar">
+  <button onclick="toggleMenuMobile()" aria-label="Abrir menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <img src="logo-icon.png" alt="D2N">
+  <span class="brand-word" style="font-size:14px">Workspace</span>
+</div>
+<div class="backdrop-mobile" id="backdrop-mobile" onclick="toggleMenuMobile()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <img src="logo-icon.png" alt="D2N">
+      <div>
+        <span class="brand-word">Workspace</span>
+        <small>Carreira &amp; Negócios</small>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <div class="avatar" id="avatar-usuario">—</div>
+      <div class="quem">
+        <div class="nome" id="nome-usuario">—</div>
+        <div class="cargo" id="cargo-usuario">—</div>
+      </div>
+      <button onclick="sair()" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="if(event.target===this) fecharModal()">
+  <div class="modal-card" id="modal-card"></div>
+</div>
+
+<script>
+// ============================================================================
+// CONFIG / AUTENTICAÇÃO
+// ============================================================================
+let tokenAtual = localStorage.getItem('d2n_token');
+const usuario = JSON.parse(localStorage.getItem('d2n_usuario') || 'null');
+
+if (!tokenAtual || !usuario) {
+  // Limpa qualquer "crachá" inválido antes de voltar pro login,
+  // pra nunca ficar num loop entre as duas páginas.
+  localStorage.removeItem('d2n_token');
+  localStorage.removeItem('d2n_refresh');
+  localStorage.removeItem('d2n_usuario');
+  window.location.href = 'index.html';
+}
+
+document.getElementById('nome-usuario').textContent = usuario?.nome || '';
+document.getElementById('cargo-usuario').textContent =
+  usuario?.role === 'admin' ? 'Administrador' : (usuario?.cargo || 'Colaborador');
+document.getElementById('avatar-usuario').textContent =
+  (usuario?.nome || '').trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('');
+
+function sair() {
+  localStorage.removeItem('d2n_token');
+  localStorage.removeItem('d2n_refresh');
+  localStorage.removeItem('d2n_usuario');
+  window.location.href = 'index.html';
+}
+
+function toggleMenuMobile() {
+  document.getElementById('sidebar').classList.toggle('aberta');
+  document.getElementById('backdrop-mobile').classList.toggle('show');
+}
+
+// Quando o token expira (normal, depois de um tempo logado), pede um novo
+// usando o "refresh_token" guardado — sem precisar fazer login de novo.
+async function renovarSessao() {
+  try {
+    const refresh_token = localStorage.getItem('d2n_refresh');
+    if (!refresh_token) return false;
+
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'refresh', refresh_token }),
+    });
+    if (!resp.ok) return false;
+
+    const data = await resp.json();
+    tokenAtual = data.access_token;
+    localStorage.setItem('d2n_token', data.access_token);
+    localStorage.setItem('d2n_refresh', data.refresh_token);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Chamada padrão pra qualquer endpoint da API, já com o token incluído.
+// Se o token tiver expirado, renova sozinho e tenta de novo uma vez.
+async function api(path, options = {}, _tentativaRenovada = false) {
+  const resp = await fetch('/api/' + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + tokenAtual,
+      ...(options.headers || {}),
+    },
+  });
+
+  const tokenExpirou = resp.status === 401 ||
+    (!resp.ok && (await resp.clone().json().catch(() => ({}))).erro?.toLowerCase().includes('jwt'));
+
+  if (tokenExpirou && !_tentativaRenovada) {
+    const renovou = await renovarSessao();
+    if (renovou) return api(path, options, true);
+    sair();
+    return null;
+  }
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data.erro || 'Erro inesperado');
+  return data;
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => (el.style.display = 'none'), 2500);
+}
+
+// ============================================================================
+// MODAL — abre um card elegante centralizado, com cabeçalho padronizado
+// ============================================================================
+function abrirModal({ eyebrow, titulo, subtitulo, corpoHtml }) {
+  document.getElementById('modal-card').innerHTML = `
+    <div class="modal-head">
+      <div>
+        ${eyebrow ? `<div class="eyebrow">${esc(eyebrow)}</div>` : ''}
+        <h2>${esc(titulo)}</h2>
+        ${subtitulo ? `<div class="modal-sub">${esc(subtitulo)}</div>` : ''}
+      </div>
+      <button class="modal-close" onclick="fecharModal()" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">${corpoHtml}</div>
+  `;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function fecharModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('modal-card').innerHTML = '';
+}
+
+// ============================================================================
+// SELETOR COM CHIPS — busca + seleciona itens de uma lista, mostrando
+// "pílulas" removíveis em vez de uma grade de checkboxes.
+// ============================================================================
+function montarMultiSelect({ containerId, opcoes, selecionadosIniciais = [] }) {
+  const container = document.getElementById(containerId);
+  const selecionados = new Set(selecionadosIniciais);
+
+  function opcaoPorId(id) {
+    return opcoes.find((o) => o.id === id);
+  }
+
+  function renderChips() {
+    const chipsEl = container.querySelector('.chips');
+    chipsEl.innerHTML = [...selecionados].map((id) => {
+      const o = opcaoPorId(id);
+      return `<span class="chip">${esc(o ? o.label : id)}<button type="button" data-remover="${id}">&times;</button></span>`;
+    }).join('');
+    chipsEl.querySelectorAll('[data-remover]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selecionados.delete(btn.dataset.remover);
+        renderChips();
+      });
+    });
+  }
+
+  function renderDropdown(filtro) {
+    const dropdown = container.querySelector('.multi-dropdown');
+    const disponiveis = opcoes.filter((o) =>
+      !selecionados.has(o.id) && o.label.toLowerCase().includes(filtro.toLowerCase())
+    );
+    if (disponiveis.length === 0) {
+      dropdown.innerHTML = `<div class="opcao-vazia">Nenhum resultado</div>`;
+    } else {
+      dropdown.innerHTML = disponiveis.map((o) =>
+        `<div class="opcao" data-id="${o.id}">${esc(o.label)}</div>`
+      ).join('');
+      dropdown.querySelectorAll('.opcao').forEach((el) => {
+        el.addEventListener('click', () => {
+          selecionados.add(el.dataset.id);
+          input.value = '';
+          renderChips();
+          renderDropdown('');
+          input.focus();
+        });
+      });
+    }
+  }
+
+  const input = container.querySelector('input');
+  const dropdown = container.querySelector('.multi-dropdown');
+
+  input.addEventListener('focus', () => {
+    container.classList.add('foco');
+    dropdown.classList.add('show');
+    renderDropdown(input.value);
+  });
+  input.addEventListener('input', () => renderDropdown(input.value));
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      container.classList.remove('foco');
+      dropdown.classList.remove('show');
+    }, 150);
+  });
+
+  renderChips();
+
+  return { getSelecionados: () => [...selecionados] };
+}
+
+function esc(s) {
+  return (s ?? '').toString().replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+// ============================================================================
+// BUSCA — barra de pesquisa reutilizável em qualquer lista
+// ============================================================================
+function htmlBusca(id, placeholder) {
+  return `
+    <div class="busca-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="${id}" placeholder="${esc(placeholder || 'Buscar...')}">
+    </div>
+  `;
+}
+
+function ligarBusca(inputId, aoDigitar) {
+  document.getElementById(inputId).addEventListener('input', (e) => aoDigitar(e.target.value.trim().toLowerCase()));
+}
+
+// ============================================================================
+// GRADE DE CARDS DE CLIENTE — usada por Assessoria, Briefing, Diagnóstico...
+// ============================================================================
+function htmlGradeClientes(clientes, hrefBase) {
+  if (!clientes || clientes.length === 0) {
+    return `<p class="empty">Nenhum cliente encontrado.</p>`;
+  }
+  return `
+    <div class="grade-clientes">
+      ${clientes.map((c) => `
+        <div class="card-cliente" onclick="location.hash='${hrefBase}/${c.id}'">
+          <div class="topo">
+            ${c.logo_url
+              ? `<img class="logo" src="${esc(c.logo_url)}" alt="">`
+              : `<div class="logo-fallback">${esc((c.nome || '?').slice(0, 2))}</div>`}
+            <div>
+              <div class="nome-cliente">${esc(c.nome)}</div>
+              <div class="segmento-cliente">${esc(c.segmento) || '—'}</div>
+            </div>
+          </div>
+          <div class="rodape-card">
+            <span class="pill">${esc(c.status)}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ============================================================================
+// NAVEGAÇÃO (rotas por hash: #/, #/clientes, #/assessoria, #/assessoria/<id>)
+// ============================================================================
+const NAV_GRUPOS = [
+  {
+    titulo: 'Geral',
+    itens: [
+      { hash: '#/', label: 'Início', icone: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>' },
+    ],
+  },
+  {
+    titulo: 'Cadastro',
+    itens: [
+      { hash: '#/clientes', label: 'Clientes', icone: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
+      { hash: '#/colaboradores', label: 'Colaborador', icone: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>' },
+      { hash: '#/produtos', label: 'Produtos', icone: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>' },
+    ],
+  },
+  {
+    titulo: 'Negócios',
+    itens: [
+      { hash: '#/briefing', label: 'Briefing do cliente', icone: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>' },
+      { hash: '#/diagnostico', label: 'Diagnóstico', icone: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
+      { hash: '#/assessoria', label: 'Assessoria', icone: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
+      { hash: '#/social-media', label: 'Social Media', icone: '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>', em_breve: true },
+      { hash: '#/trafego-pago', label: 'Tráfego Pago', icone: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', em_breve: true },
+    ],
+  },
+];
+
+function renderNav() {
+  const atual = location.hash || '#/';
+  const grupos = usuario.role === 'admin'
+    ? NAV_GRUPOS
+    : NAV_GRUPOS.filter((g) => g.titulo !== 'Cadastro');
+
+  document.getElementById('nav').innerHTML = grupos.map((grupo) => `
+    <div class="nav-grupo-titulo">${grupo.titulo}</div>
+    ${grupo.itens.map((r) => {
+      if (r.em_breve) {
+        return `
+          <span class="nav-em-breve">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${r.icone}</svg>
+            ${r.label}
+            <em>em breve</em>
+          </span>
+        `;
+      }
+      return `
+        <a href="${r.hash}" class="${atual === r.hash ? 'active' : ''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${r.icone}</svg>
+          ${r.label}
+        </a>
+      `;
+    }).join('')}
+  `).join('');
+}
+
+window.addEventListener('hashchange', rotear);
+window.addEventListener('DOMContentLoaded', rotear);
+
+function rotear() {
+  renderNav();
+  document.getElementById('sidebar').classList.remove('aberta');
+  document.getElementById('backdrop-mobile').classList.remove('show');
+  const hash = location.hash || '#/';
+  const partes = hash.replace('#/', '').split('/').filter(Boolean);
+
+  const SOMENTE_ADMIN = ['clientes', 'colaboradores', 'produtos'];
+  if (SOMENTE_ADMIN.includes(partes[0]) && usuario.role !== 'admin') {
+    return viewAcessoNegado();
+  }
+
+  if (partes[0] === 'assessoria' && partes[1]) {
+    return viewAssessoriaDetalhe(partes[1]);
+  }
+  if (partes[0] === 'assessoria') return viewAssessoriaLista();
+  if (partes[0] === 'clientes' && partes[1]) return viewClienteDetalhe(partes[1]);
+  if (partes[0] === 'clientes') return viewClientesLista();
+  if (partes[0] === 'colaboradores') return viewColaboradoresLista();
+  if (partes[0] === 'produtos') return viewProdutosLista();
+  if (partes[0] === 'briefing') return viewEmConstrucao('Briefing do cliente');
+  if (partes[0] === 'diagnostico' && partes[1]) return viewDiagnosticoDetalhe(partes[1]);
+  if (partes[0] === 'diagnostico') return viewDiagnosticoLista();
+  return viewInicio();
+}
+
+function viewAcessoNegado() {
+  document.getElementById('main').innerHTML = `
+    <div class="card" style="margin-top:2rem">
+      <p class="empty">Esse cadastro é restrito ao Administrador.</p>
+    </div>
+  `;
+}
+
+// ============================================================================
+// VIEW: INÍCIO
+// ============================================================================
+function viewInicio() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">D2N Workspace</div>
+    <h1>Olá, ${esc((usuario.nome || '').split(' ')[0])}</h1>
+    <p class="sub" style="margin-top:.75rem;max-width:480px;font-size:14px;color:var(--ink-soft)">
+      Use o menu à esquerda para acessar os clientes e os módulos de negócio.
+    </p>
+  `;
+}
+
+function viewEmConstrucao(titulo) {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Negócios</div>
+    <h1>${esc(titulo)}</h1>
+    <div class="card" style="margin-top:1.25rem">
+      <p class="empty">Esse módulo ainda está sendo construído.</p>
+    </div>
+  `;
+}
+
+// ============================================================================
+// VIEW: CLIENTES (lista + cadastro)
+// ============================================================================
+let _clientesCache = [];
+
+async function viewClientesLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Cadastro</div>
+    <h1>Clientes</h1>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-clientes', 'Buscar cliente...')}
+      ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormCliente()">Novo cliente</button>` : ''}
+    </div>
+    <div id="tabela-clientes" class="card"><p class="empty">Carregando...</p></div>
+  `;
+
+  try {
+    const { clientes } = await api('clientes');
+    _clientesCache = clientes || [];
+    renderTabelaClientes(_clientesCache);
+    ligarBusca('busca-clientes', (termo) => {
+      renderTabelaClientes(_clientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
+    });
+  } catch (e) {
+    document.getElementById('tabela-clientes').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function renderTabelaClientes(clientes) {
+  const el = document.getElementById('tabela-clientes');
+  if (!clientes || clientes.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum cliente encontrado.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Cliente</th><th>Segmento</th><th>Produtos</th><th>Status</th></tr></thead>
+      <tbody>
+        ${clientes.map((c) => `
+          <tr class="linha" onclick="location.hash='#/clientes/${c.id}'">
+            <td><a class="link" href="#/clientes/${c.id}">${esc(c.nome)}</a></td>
+            <td>${esc(c.segmento) || '—'}</td>
+            <td>${(c.produtos || []).map((p) => esc(p.nome)).join(', ') || '—'}</td>
+            <td><span class="pill">${esc(c.status)}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function toggleFormCliente() {
+  let produtos = [];
+  let diagnosticosExternos = [];
+  try { ({ produtos } = await api('produtos')); } catch (e) { /* segue sem a lista se falhar */ }
+  try { ({ diagnosticos: diagnosticosExternos } = await api('diagnosticos?tipo=externo')); } catch (e) { /* opcional */ }
+
+  abrirModal({
+    eyebrow: 'Cadastro',
+    titulo: 'Novo cliente',
+    subtitulo: 'Os dados de Nome Fantasia aparecem nos documentos do sistema.',
+    corpoHtml: `
+      <form id="novo-cliente-form">
+        <div class="field" style="display:flex;align-items:center;gap:14px">
+          <div id="preview-logo" style="width:56px;height:56px;border-radius:12px;background:var(--paper);border:1.5px dashed var(--line);
+            display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:22px;color:var(--ink-faint)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <div style="flex:1">
+            <label style="display:block;font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px">Logo do cliente</label>
+            <input type="file" name="logo" accept="image/*" id="input-logo">
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Tipo de documento</label>
+            <select name="tipo_documento">
+              <option value="cnpj">CNPJ</option>
+              <option value="cpf">CPF</option>
+            </select>
+          </div>
+          <div class="field"><label>CNPJ / CPF</label><input name="cnpj_cpf" placeholder="00.000.000/0000-00"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Razão social</label><input name="razao_social"></div>
+          <div class="field"><label>Nome fantasia</label><input name="nome" required placeholder="Como vai aparecer nos documentos"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Segmento</label><input name="segmento"></div>
+          <div class="field"><label>Interlocutor</label><input name="interlocutor"></div>
+        </div>
+        <div class="field"><label>Telefone</label><input name="telefone"></div>
+        ${diagnosticosExternos.length > 0 ? `
+        <div class="field">
+          <label>Vincular a um Diagnóstico Externo existente (opcional)</label>
+          <select name="diagnostico_externo_id">
+            <option value="">Nenhum</option>
+            ${diagnosticosExternos.map((d) => `<option value="${d.id}">${esc(d.nome_prospect || 'Sem nome')}</option>`).join('')}
+          </select>
+        </div>
+        ` : ''}
+        <div class="field">
+          <label>Produtos contratados</label>
+          <div class="multi-select" id="multi-produtos">
+            <div class="chips"></div>
+            <input type="text" placeholder="Buscar produto...">
+            <div class="multi-dropdown"></div>
+          </div>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar cliente</button>
+      </form>
+    `,
+  });
+
+  const seletorProdutos = montarMultiSelect({
+    containerId: 'multi-produtos',
+    opcoes: produtos.map((p) => ({ id: p.id, label: p.nome })),
+  });
+
+  let arquivoLogo = null;
+  document.getElementById('input-logo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    arquivoLogo = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      document.getElementById('preview-logo').innerHTML = `<img src="${reader.result}" style="width:100%;height:100%;object-fit:cover">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('novo-cliente-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      const { cliente } = await api('clientes', {
+        method: 'POST',
+        body: JSON.stringify({
+          nome: form.nome.value,
+          razao_social: form.razao_social.value,
+          tipo_documento: form.tipo_documento.value,
+          cnpj_cpf: form.cnpj_cpf.value,
+          segmento: form.segmento.value,
+          interlocutor: form.interlocutor.value,
+          telefone: form.telefone.value,
+          produto_ids: seletorProdutos.getSelecionados(),
+          diagnostico_externo_id: form.diagnostico_externo_id?.value || null,
+        }),
+      });
+
+      if (arquivoLogo) {
+        await enviarLogo(cliente.id, arquivoLogo);
+      }
+
+      toast('Cliente criado com sucesso');
+      fecharModal();
+      viewClientesLista();
+    } catch (err) {
+      toast(err.message);
+      btn.disabled = false;
+    }
+  });
+}
+
+// Lê o arquivo como base64 e envia pra função que faz o upload no Storage
+function enviarLogo(clienteId, file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result.split(',')[1];
+        await api('upload-logo', {
+          method: 'POST',
+          body: JSON.stringify({ cliente_id: clienteId, filename: file.name, base64 }),
+        });
+        resolve();
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ============================================================================
+// VIEW: DETALHE DO CLIENTE (cadastro central + vínculos de colaboradores)
+// ============================================================================
+async function viewClienteDetalhe(clienteId) {
+  document.getElementById('main').innerHTML = `<p class="empty">Carregando...</p>`;
+
+  let cliente, vinculos, colaboradores;
+  try {
+    [{ cliente }, { vinculos }] = await Promise.all([
+      api('clientes?id=' + clienteId),
+      api('vinculos?cliente_id=' + clienteId),
+    ]);
+    if (usuario.role === 'admin') {
+      ({ colaboradores } = await api('colaboradores'));
+    }
+  } catch (e) {
+    document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    return;
+  }
+
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Cliente</div>
+    <h1>${esc(cliente.nome)}</h1>
+    <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+
+    ${usuario.role === 'admin' ? `
+    <div class="card">
+      <h3 style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:4px">Colaboradores vinculados</h3>
+      <p class="sub" style="margin-bottom:1rem">Só os colaboradores vinculados aqui veem e editam este cliente nos módulos correspondentes.</p>
+      <div id="lista-vinculos" style="margin-bottom:1rem"></div>
+      <div style="display:flex;gap:8px">
+        <select id="sel-colaborador" style="flex:1;padding:9px;border:1.5px solid var(--line);border-radius:4px">
+          <option value="">Selecione um colaborador...</option>
+          ${(colaboradores || []).map((c) => `<option value="${c.id}">${esc(c.nome)}${c.cargo ? ' (' + esc(c.cargo) + ')' : ''}</option>`).join('')}
+        </select>
+        <select id="sel-modulo" style="padding:9px;border:1.5px solid var(--line);border-radius:4px">
+          <option value="assessoria">Assessoria</option>
+          <option value="marketing">Marketing</option>
+          <option value="comercial">Comercial</option>
+        </select>
+        <button class="btn btn-navy" onclick="vincularColaborador('${clienteId}')">Vincular</button>
+      </div>
+    </div>
+    ` : ''}
+  `;
+
+  if (usuario.role === 'admin') renderVinculos(vinculos);
+}
+
+function renderVinculos(vinculos) {
+  const el = document.getElementById('lista-vinculos');
+  if (!vinculos || vinculos.length === 0) {
+    el.innerHTML = `<p class="sub">Nenhum colaborador vinculado ainda.</p>`;
+    return;
+  }
+  el.innerHTML = vinculos.map((v) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface);border-radius:5px;padding:8px 12px;margin-bottom:6px">
+      <span style="font-size:13px">${esc(v.usuarios?.nome)} <span style="font-size:11px;color:var(--ink-faint);text-transform:uppercase">· ${esc(v.modulo)}</span></span>
+      <button style="background:none;border:none;color:#e53e3e;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer" onclick="removerVinculo('${v.id}')">Remover</button>
+    </div>
+  `).join('');
+}
+
+async function vincularColaborador(clienteId) {
+  const usuario_id = document.getElementById('sel-colaborador').value;
+  const modulo = document.getElementById('sel-modulo').value;
+  if (!usuario_id) return toast('Selecione um colaborador');
+  try {
+    await api('vinculos', { method: 'POST', body: JSON.stringify({ cliente_id: clienteId, usuario_id, modulo }) });
+    toast('Colaborador vinculado');
+    viewClienteDetalhe(clienteId);
+  } catch (e) { toast(e.message); }
+}
+
+async function removerVinculo(id) {
+  const clienteId = location.hash.split('/')[2];
+  try {
+    await api('vinculos?id=' + id, { method: 'DELETE' });
+    toast('Vínculo removido');
+    viewClienteDetalhe(clienteId);
+  } catch (e) { toast(e.message); }
+}
+
+// ============================================================================
+// VIEW: COLABORADORES (lista + cadastro com login e vínculo de clientes)
+// ============================================================================
+async function viewColaboradoresLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Cadastro</div>
+    <h1>Colaborador</h1>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-colaboradores', 'Buscar colaborador...')}
+      ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormColaborador()">Novo colaborador</button>` : ''}
+    </div>
+    <div id="tabela-colaboradores" class="card"><p class="empty">Carregando...</p></div>
+  `;
+
+  try {
+    const { colaboradores } = await api('colaboradores');
+    renderTabelaColaboradores(colaboradores || []);
+    ligarBusca('busca-colaboradores', (termo) => {
+      renderTabelaColaboradores((colaboradores || []).filter((c) => c.nome.toLowerCase().includes(termo)));
+    });
+  } catch (e) {
+    document.getElementById('tabela-colaboradores').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function renderTabelaColaboradores(colaboradores) {
+  const el = document.getElementById('tabela-colaboradores');
+  if (!colaboradores || colaboradores.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum colaborador encontrado.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Perfil</th><th>Status</th></tr></thead>
+      <tbody>
+        ${colaboradores.map((c) => `
+          <tr>
+            <td>${esc(c.nome)}</td>
+            <td>${esc(c.email)}</td>
+            <td>${esc(c.cargo) || '—'}</td>
+            <td>${c.role === 'admin' ? 'Administrador' : 'Colaborador'}</td>
+            <td><span class="pill">${c.ativo ? 'ativo' : 'inativo'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function toggleFormColaborador() {
+  let clientes = [];
+  try { ({ clientes } = await api('clientes')); } catch (e) { /* segue sem a lista se falhar */ }
+
+  abrirModal({
+    eyebrow: 'Cadastro',
+    titulo: 'Novo colaborador',
+    subtitulo: 'Cria o login e já define quais clientes ele acompanha.',
+    corpoHtml: `
+      <form id="novo-colaborador-form">
+        <div class="grid2">
+          <div class="field"><label>Nome completo</label><input name="nome" required></div>
+          <div class="field"><label>Função</label><input name="cargo" placeholder="Ex: Assessor, Consultor de Marketing"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>E-mail (login)</label><input type="email" name="email" required></div>
+          <div class="field"><label>Senha provisória</label><input type="password" name="password" required></div>
+        </div>
+        <div class="field">
+          <label>Perfil de acesso</label>
+          <select name="role">
+            <option value="colaborador">Colaborador</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Vincular clientes (responsabilidade)</label>
+          <div class="multi-select" id="multi-clientes-colab">
+            <div class="chips"></div>
+            <input type="text" placeholder="Buscar cliente...">
+            <div class="multi-dropdown"></div>
+          </div>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar colaborador</button>
+      </form>
+    `,
+  });
+
+  const seletorClientes = montarMultiSelect({
+    containerId: 'multi-clientes-colab',
+    opcoes: clientes.map((c) => ({ id: c.id, label: c.nome })),
+  });
+
+  document.getElementById('novo-colaborador-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    try {
+      await api('colaboradores-criar', {
+        method: 'POST',
+        body: JSON.stringify({
+          nome: form.nome.value,
+          email: form.email.value,
+          password: form.password.value,
+          role: form.role.value,
+          cargo: form.cargo.value,
+          cliente_ids: seletorClientes.getSelecionados(),
+        }),
+      });
+      toast('Colaborador criado com sucesso');
+      fecharModal();
+      viewColaboradoresLista();
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+}
+
+// ============================================================================
+// VIEW: PRODUTOS (lista + cadastro simples)
+// ============================================================================
+async function viewProdutosLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Cadastro</div>
+    <h1>Produtos</h1>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-produtos', 'Buscar produto...')}
+      ${usuario.role === 'admin' ? `<button class="btn btn-grad" onclick="toggleFormProduto()">Novo produto</button>` : ''}
+    </div>
+    <div id="tabela-produtos" class="card"><p class="empty">Carregando...</p></div>
+  `;
+
+  try {
+    const { produtos } = await api('produtos');
+    renderTabelaProdutos(produtos || []);
+    ligarBusca('busca-produtos', (termo) => {
+      renderTabelaProdutos((produtos || []).filter((p) => p.nome.toLowerCase().includes(termo)));
+    });
+  } catch (e) {
+    document.getElementById('tabela-produtos').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+const ROTULO_CATEGORIA = { assessoria: 'Assessoria', social_media: 'Social Media' };
+
+function renderTabelaProdutos(produtos) {
+  const el = document.getElementById('tabela-produtos');
+  if (!produtos || produtos.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum produto encontrado.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Nome</th><th>Descrição</th><th>Categoria</th><th>Status</th></tr></thead>
+      <tbody>
+        ${produtos.map((p) => `
+          <tr>
+            <td><strong>${esc(p.nome)}</strong></td>
+            <td class="sub">${esc(p.descricao) || '—'}</td>
+            <td class="sub">${ROTULO_CATEGORIA[p.categoria] || '—'}</td>
+            <td><span class="pill">${p.ativo ? 'ativo' : 'inativo'}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function toggleFormProduto() {
+  abrirModal({
+    eyebrow: 'Cadastro',
+    titulo: 'Novo produto',
+    corpoHtml: `
+      <form id="novo-produto-form">
+        <div class="field"><label>Nome do produto</label><input name="nome" required></div>
+        <div class="field"><label>Descrição</label><textarea name="descricao" rows="3"></textarea></div>
+        <div class="field">
+          <label>Categoria (usada pelos módulos de Negócios para filtrar)</label>
+          <select name="categoria">
+            <option value="">Nenhuma (não aparece em módulo filtrado)</option>
+            <option value="assessoria">Assessoria</option>
+            <option value="social_media">Social Media</option>
+          </select>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar produto</button>
+      </form>
+    `,
+  });
+  document.getElementById('novo-produto-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    try {
+      await api('produtos', {
+        method: 'POST',
+        body: JSON.stringify({
+          nome: form.nome.value,
+          descricao: form.descricao.value,
+          categoria: form.categoria.value || null,
+        }),
+      });
+      toast('Produto criado com sucesso');
+      fecharModal();
+      viewProdutosLista();
+    } catch (err) { toast(err.message); }
+  });
+}
+
+// ============================================================================
+// VIEW: ASSESSORIA — LISTA DE CLIENTES
+// ============================================================================
+async function viewAssessoriaLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Negócios</div>
+    <h1>Assessoria</h1>
+    ${htmlBusca('busca-assessoria', 'Buscar cliente...')}
+    <div id="grade-assessoria"><p class="empty">Carregando...</p></div>
+  `;
+
+  try {
+    const { clientes } = await api('clientes?categoria=assessoria');
+    const el = document.getElementById('grade-assessoria');
+    if (!clientes || clientes.length === 0) {
+      el.innerHTML = `<div class="card"><p class="empty">Nenhum cliente de Assessoria vinculado a você ainda.<br>Peça ao administrador para vincular um cliente ao seu acesso.</p></div>`;
+      return;
+    }
+    el.innerHTML = htmlGradeClientes(clientes, '#/assessoria');
+    ligarBusca('busca-assessoria', (termo) => {
+      el.innerHTML = htmlGradeClientes(clientes.filter((c) => c.nome.toLowerCase().includes(termo)), '#/assessoria');
+    });
+  } catch (e) {
+    document.getElementById('grade-assessoria').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+// ============================================================================
+// VIEW: ASSESSORIA — DETALHE DO CLIENTE (Sessões / Planejamento / OKRs)
+// ============================================================================
+const PILARES = ['Comercial', 'Marketing', 'Processos', 'Pessoas', 'Finanças'];
+let abaAtual = 'sessoes';
+
+async function viewAssessoriaDetalhe(clienteId) {
+  document.getElementById('main').innerHTML = `<p class="empty">Carregando...</p>`;
+
+  let cliente;
+  try {
+    ({ cliente } = await api('clientes?id=' + clienteId));
+  } catch (e) {
+    document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    return;
+  }
+
+  abaAtual = 'sessoes';
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Plano de Assessoria</div>
+    <h1>${esc(cliente.nome)}</h1>
+    <p class="sub" style="margin-bottom:1.5rem">${cliente.interlocutor ? 'Interlocutor: ' + esc(cliente.interlocutor) : ''}</p>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="sessoes">Sessões de atendimento</button>
+      <button class="tab" data-tab="planejamento">Planejamento estratégico</button>
+      <button class="tab" data-tab="okrs">Plano tático (OKRs)</button>
+    </div>
+    <div id="conteudo-aba"></div>
+  `;
+
+  document.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      abaAtual = btn.dataset.tab;
+      renderAba(clienteId);
+    });
+  });
+
+  renderAba(clienteId);
+}
+
+async function renderAba(clienteId) {
+  const el = document.getElementById('conteudo-aba');
+  el.innerHTML = `<p class="empty">Carregando...</p>`;
+
+  if (abaAtual === 'sessoes') return renderAbaSessoes(clienteId, el);
+  if (abaAtual === 'planejamento') return renderAbaPlanejamento(clienteId, el);
+  if (abaAtual === 'okrs') return renderAbaOkrs(clienteId, el);
+}
+
+// --- Sessões ---
+async function renderAbaSessoes(clienteId, el) {
+  const { sessoes } = await api('sessoes?cliente_id=' + clienteId);
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+      <button class="btn btn-grad" onclick="toggleFormSessao('${clienteId}')">Nova sessão</button>
+    </div>
+    <div id="lista-sessoes">
+      ${(!sessoes || sessoes.length === 0) ? `<div class="card"><p class="empty">Nenhuma sessão registrada ainda.</p></div>` :
+        sessoes.map((s) => `
+          <div class="card" style="margin-bottom:.75rem">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <strong style="font-family:'Sora',sans-serif;color:var(--navy)">${esc(s.titulo)}</strong>
+              <span class="sub">${new Date(s.data_sessao + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+            </div>
+            ${s.pauta ? `<p class="sub"><strong>Pauta:</strong> ${esc(s.pauta)}</p>` : ''}
+            ${s.resumo ? `<p class="sub" style="margin-top:4px"><strong>Resumo:</strong> ${esc(s.resumo)}</p>` : ''}
+            ${s.encaminhamentos ? `<p class="sub" style="margin-top:4px"><strong>Encaminhamentos:</strong> ${esc(s.encaminhamentos)}</p>` : ''}
+          </div>
+        `).join('')}
+    </div>
+  `;
+}
+
+function toggleFormSessao(clienteId) {
+  abrirModal({
+    eyebrow: 'Assessoria',
+    titulo: 'Nova sessão de atendimento',
+    corpoHtml: `
+      <form id="form-nova-sessao">
+        <div class="grid2">
+          <div class="field"><label>Título</label><input name="titulo" required></div>
+          <div class="field"><label>Data</label><input type="date" name="data_sessao" required></div>
+        </div>
+        <div class="field"><label>Pauta</label><textarea name="pauta" rows="2"></textarea></div>
+        <div class="field"><label>Resumo da sessão</label><textarea name="resumo" rows="2"></textarea></div>
+        <div class="field"><label>Encaminhamentos</label><textarea name="encaminhamentos" rows="2"></textarea></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar sessão</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-nova-sessao').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    try {
+      await api('sessoes', {
+        method: 'POST',
+        body: JSON.stringify({
+          cliente_id: clienteId,
+          titulo: f.titulo.value,
+          data_sessao: f.data_sessao.value,
+          pauta: f.pauta.value,
+          resumo: f.resumo.value,
+          encaminhamentos: f.encaminhamentos.value,
+        }),
+      });
+      toast('Sessão salva');
+      fecharModal();
+      renderAba(clienteId);
+    } catch (err) { toast(err.message); }
+  });
+}
+
+// --- Planejamento (5 pilares) ---
+async function renderAbaPlanejamento(clienteId, el) {
+  const { planejamento } = await api('planejamento?cliente_id=' + clienteId);
+  const porPilar = {};
+  (planejamento || []).forEach((p) => (porPilar[p.pilar] = p));
+
+  el.innerHTML = PILARES.map((pilar, i) => {
+    const atual = porPilar[pilar] || {};
+    return `
+      <details class="card" style="margin-bottom:.75rem" ${i === 0 ? 'open' : ''}>
+        <summary style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:var(--navy);font-weight:700;cursor:pointer">${pilar}</summary>
+        <form class="form-pilar" data-pilar="${pilar}" style="margin-top:1rem">
+          <div class="field"><label>Objetivo</label><textarea name="objetivo" rows="2">${esc(atual.objetivo)}</textarea></div>
+          <div class="field"><label>Diagnóstico</label><textarea name="diagnostico" rows="2">${esc(atual.diagnostico)}</textarea></div>
+          <div class="field"><label>Estratégia</label><textarea name="estrategia" rows="2">${esc(atual.estrategia)}</textarea></div>
+          <button class="btn btn-navy" type="submit">Salvar ${pilar}</button>
+        </form>
+      </details>
+    `;
+  }).join('');
+
+  document.querySelectorAll('.form-pilar').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('planejamento', {
+          method: 'POST',
+          body: JSON.stringify({
+            cliente_id: clienteId,
+            pilar: form.dataset.pilar,
+            objetivo: form.objetivo.value,
+            diagnostico: form.diagnostico.value,
+            estrategia: form.estrategia.value,
+          }),
+        });
+        toast(form.dataset.pilar + ' salvo');
+      } catch (err) { toast(err.message); }
+    });
+  });
+}
+
+// --- OKRs ---
+async function renderAbaOkrs(clienteId, el) {
+  const { okrs } = await api('okrs?cliente_id=' + clienteId);
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+      <button class="btn btn-grad" onclick="toggleFormOkr('${clienteId}')">Novo OKR</button>
+    </div>
+    <div id="lista-okrs">
+      ${(!okrs || okrs.length === 0) ? `<div class="card"><p class="empty">Nenhum OKR cadastrado ainda.</p></div>` :
+        okrs.map((o) => `
+          <div class="card" style="margin-bottom:.75rem">
+            <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(o.objetivo)}</div>
+            <div class="sub" style="margin:2px 0 8px">${esc(o.resultado_chave)}</div>
+            <div class="prog-row">
+              <div class="prog-track"><div class="prog-fill" style="width:${o.progresso}%"></div></div>
+              <input class="prog-input" type="number" min="0" max="100" value="${o.progresso}"
+                onchange="atualizarOkr('${o.id}', this.value, '${clienteId}')">
+              <span class="sub">%</span>
+            </div>
+            ${o.prazo ? `<div class="sub" style="margin-top:6px">Prazo: ${new Date(o.prazo + 'T00:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
+          </div>
+        `).join('')}
+    </div>
+  `;
+}
+
+function toggleFormOkr(clienteId) {
+  abrirModal({
+    eyebrow: 'Assessoria',
+    titulo: 'Novo OKR',
+    corpoHtml: `
+      <form id="form-novo-okr">
+        <div class="field"><label>Objetivo</label><input name="objetivo" required></div>
+        <div class="field"><label>Resultado-chave</label><input name="resultado_chave" required></div>
+        <div class="grid2">
+          <div class="field"><label>Progresso inicial (%)</label><input type="number" name="progresso" min="0" max="100" value="0"></div>
+          <div class="field"><label>Prazo</label><input type="date" name="prazo"></div>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar OKR</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-novo-okr').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    try {
+      await api('okrs', {
+        method: 'POST',
+        body: JSON.stringify({
+          cliente_id: clienteId,
+          objetivo: f.objetivo.value,
+          resultado_chave: f.resultado_chave.value,
+          progresso: f.progresso.value,
+          prazo: f.prazo.value,
+        }),
+      });
+      toast('OKR salvo');
+      fecharModal();
+      renderAba(clienteId);
+    } catch (err) { toast(err.message); }
+  });
+}
+
+async function atualizarOkr(id, progresso, clienteId) {
+  try {
+    await api('okrs?id=' + id, { method: 'PATCH', body: JSON.stringify({ progresso }) });
+    toast('Progresso atualizado');
+    renderAba(clienteId);
+  } catch (e) { toast(e.message); }
+}
+// ============================================================================
+// MÓDULO: DIAGNÓSTICO — conteúdo (perguntas, textos, ações, produtos)
+// ============================================================================
+const AREAS_DIAG = [
+  {id:'comercial',label:'Comercial',icone:'📈',
+   perguntas:[
+    {q:'O processo de vendas da empresa é estruturado e seguido pela equipe?',opts:['Não existe processo definido','Existe parcialmente, mas sem padrão','Processo básico com falhas frequentes','Processo organizado e aplicado','Processo bem estruturado, otimizado e monitorado']},
+    {q:'A empresa possui rotina consistente de prospecção de novos clientes?',opts:['Não realiza prospecção','Prospecção ocasional e desorganizada','Existe prospecção, mas sem constância','Prospecção frequente e organizada','Processo contínuo com metas e indicadores']},
+    {q:'Como a empresa controla contatos, leads e oportunidades comerciais?',opts:['Não possui controle','Controle manual e desatualizado','Controle básico em planilhas ou WhatsApp','Utiliza sistema/CRM parcialmente','CRM estruturado com acompanhamento completo']},
+    {q:'Como está a capacidade da empresa em converter oportunidades em vendas?',opts:['Conversão muito baixa','Conversão abaixo do esperado','Conversão mediana','Boa taxa de conversão','Alta performance comercial com previsibilidade']},
+    {q:'A empresa acompanha metas e indicadores comerciais?',opts:['Não acompanha indicadores','Acompanha raramente','Possui alguns indicadores básicos','Indicadores acompanhados regularmente','Gestão comercial totalmente orientada por dados']},
+    {q:'Como está o desenvolvimento da equipe de vendas?',opts:['Não existe treinamento','Treinamentos raros e improvisados','Capacitação eventual','Treinamentos frequentes','Desenvolvimento contínuo e estratégico']},
+    {q:'Como a empresa mantém relacionamento e pós-venda com os clientes?',opts:['Não possui pós-venda','Contato apenas quando necessário','Relacionamento básico','Pós-venda organizado','Estratégia forte de fidelização e relacionamento']},
+    {q:'A empresa consegue transmitir claramente seu diferencial ao mercado?',opts:['Não possui posicionamento claro','Comunicação confusa','Diferencial pouco definido','Boa comunicação de valor','Posicionamento forte e reconhecido']},
+    {q:'O comercial está alinhado com financeiro, operação e entrega?',opts:['Setores totalmente desalinhados','Comunicação muito falha','Integração parcial','Boa comunicação entre áreas','Integração estratégica e eficiente']},
+    {q:'A empresa consegue prever vendas, faturamento e resultados?',opts:['Nenhuma previsibilidade','Previsões muito imprecisas','Alguma noção de projeção','Boa previsibilidade','Gestão previsível com projeções confiáveis']}
+  ]},
+  {id:'marketing',label:'Marketing',icone:'📣',
+   perguntas:[
+    {q:'A empresa possui identidade visual profissional e posicionamento claro no mercado?',opts:['Não possui identidade definida','Visual amador e comunicação inconsistente','Identidade básica, mas pouco estratégica','Boa identidade visual e comunicação alinhada','Marca forte, profissional e reconhecível']},
+    {q:'Como está a presença digital da empresa (Instagram, site, Google, redes sociais)?',opts:['Presença inexistente ou abandonada','Redes desorganizadas e sem frequência','Presença básica com pouca estratégia','Boa presença digital e constância','Presença forte, profissional e estratégica']},
+    {q:'A empresa produz conteúdo relevante para atrair e educar clientes?',opts:['Não produz conteúdo','Conteúdo sem planejamento','Publicações ocasionais','Conteúdo frequente e direcionado','Estratégia sólida com geração de autoridade']},
+    {q:'Os produtos ou serviços são bem definidos e alinhados às necessidades do mercado? (1º P)',opts:['Sem clareza ou diferenciação','Produtos pouco estruturados','Produtos razoavelmente definidos','Boa proposta de valor','Soluções muito bem posicionadas e competitivas']},
+    {q:'A estratégia de precificação é coerente com o mercado e o posicionamento? (2º P)',opts:['Preços definidos sem critério','Preços inconsistentes','Precificação parcialmente estruturada','Estratégia de preços bem definida','Precificação estratégica e lucrativa']},
+    {q:'A empresa consegue entregar seus produtos/serviços de forma eficiente ao cliente? (3º P)',opts:['Processo desorganizado','Muitas falhas na entrega/distribuição','Operação razoável','Boa estrutura de atendimento/distribuição','Distribuição eficiente, escalável e estratégica']},
+    {q:'Como está a capacidade de divulgar a marca e gerar demanda? (4º P)',opts:['Não realiza divulgação','Divulgação muito limitada','Algumas ações de marketing','Divulgação consistente','Marketing ativo com forte geração de oportunidades']},
+    {q:'A empresa possui estratégias para captar potenciais clientes?',opts:['Não gera leads','Captação improvisada','Algumas ações de captação','Estratégias estruturadas','Processo contínuo e previsível de geração de leads']},
+    {q:'A empresa acompanha métricas e resultados das ações de marketing?',opts:['Não acompanha resultados','Acompanha raramente','Possui métricas básicas','Analisa resultados frequentemente','Gestão orientada por dados e performance']},
+    {q:'Marketing e vendas trabalham de forma alinhada?',opts:['Áreas totalmente desconectadas','Comunicação muito falha','Alinhamento parcial','Boa integração','Marketing e comercial atuam estrategicamente juntos']}
+  ]},
+  {id:'processos',label:'Processos',icone:'⚙️',
+   perguntas:[
+    {q:'Os processos da empresa são documentados e padronizados?',opts:['Não existem processos definidos','Processos totalmente informais','Alguns processos parcialmente definidos','Processos organizados e padronizados','Processos claros, documentados e otimizados']},
+    {q:'Como está a organização das rotinas e atividades da empresa?',opts:['Ambiente desorganizado e reativo','Muitas falhas e improvisos','Organização razoável','Boa estrutura operacional','Operação organizada, fluida e eficiente']},
+    {q:'As atividades seguem um fluxo lógico e eficiente?',opts:['Não existe fluxo definido','Fluxos confusos e retrabalho constante','Fluxos parcialmente organizados','Fluxos bem estruturados','Fluxos eficientes e continuamente melhorados']},
+    {q:'Como está o índice de falhas e retrabalho nos processos?',opts:['Retrabalho excessivo e frequente','Muitas falhas operacionais','Falhas moderadas','Baixo índice de erros','Processos altamente eficientes e confiáveis']},
+    {q:'A empresa utiliza ferramentas adequadas para gestão operacional?',opts:['Não utiliza sistemas','Uso muito limitado e desorganizado','Utiliza ferramentas básicas','Sistemas apoiam bem a operação','Forte integração tecnológica e automação']},
+    {q:'As funções e responsabilidades da equipe estão claras?',opts:['Total falta de definição','Muitas dúvidas e sobreposição de funções','Responsabilidades parcialmente definidas','Funções bem distribuídas','Estrutura clara com alta responsabilidade individual']},
+    {q:'Como está a comunicação entre setores e equipe?',opts:['Comunicação caótica','Muitas falhas de alinhamento','Comunicação razoável','Boa comunicação interna','Comunicação fluida, rápida e estratégica']},
+    {q:'A empresa acompanha execução e qualidade dos processos?',opts:['Não existe acompanhamento','Controle muito falho','Acompanhamento básico','Controle frequente','Gestão por indicadores e melhoria contínua']},
+    {q:'Os processos suportariam crescimento da empresa?',opts:['Operação não suportaria crescimento','Crescimento geraria grande desorganização','Estrutura suporta parcialmente','Boa capacidade de crescimento','Processos preparados para escalar']},
+    {q:'A empresa busca melhorar processos e aumentar eficiência?',opts:['Não existe preocupação com melhoria','Melhorias apenas quando surgem problemas','Algumas iniciativas de melhoria','Busca frequente por eficiência','Cultura forte de melhoria contínua e inovação']}
+  ]},
+  {id:'pessoas',label:'Pessoas & DHO',icone:'👥',
+   perguntas:[
+    {q:'A empresa possui uma estrutura organizacional clara e funcional?',opts:['Total desorganização estrutural','Funções confusas e sobrepostas','Estrutura parcialmente definida','Estrutura organizada','Estrutura clara, estratégica e eficiente']},
+    {q:'Os colaboradores sabem exatamente suas funções e responsabilidades?',opts:['Não existe definição clara','Muitas dúvidas e conflitos de função','Clareza parcial','Funções bem definidas','Responsabilidades claras e alinhadas à estratégia']},
+    {q:'Como está o processo de contratação da empresa?',opts:['Contratações sem critério','Processo improvisado','Processo básico de seleção','Processo estruturado','Recrutamento estratégico e assertivo']},
+    {q:'A empresa investe no desenvolvimento da equipe?',opts:['Não realiza treinamentos','Treinamentos muito raros','Capacitações ocasionais','Desenvolvimento frequente','Cultura forte de aprendizado contínuo']},
+    {q:'Como está a atuação das lideranças da empresa?',opts:['Liderança inexistente ou tóxica','Gestão muito falha','Liderança razoável','Bons líderes e acompanhamento','Liderança estratégica e inspiradora']},
+    {q:'Como está o ambiente de trabalho e relacionamento interno?',opts:['Ambiente negativo e desgastante','Muitos conflitos internos','Clima razoável','Ambiente saudável','Cultura forte, positiva e engajadora']},
+    {q:'A comunicação entre liderança e equipe é eficiente?',opts:['Comunicação caótica','Muitas falhas de alinhamento','Comunicação mediana','Boa comunicação interna','Comunicação clara, transparente e estratégica']},
+    {q:'A empresa acompanha desempenho e resultados da equipe?',opts:['Não acompanha desempenho','Avaliações informais e raras','Acompanhamento básico','Avaliações frequentes','Gestão por desempenho estruturada']},
+    {q:'Os colaboradores demonstram comprometimento e motivação?',opts:['Equipe desmotivada','Baixo engajamento','Motivação moderada','Equipe comprometida','Alto engajamento e senso de pertencimento']},
+    {q:'A empresa possui valores e cultura bem definidos?',opts:['Não possui cultura definida','Cultura confusa ou inexistente','Alguns valores percebidos','Cultura organizacional estruturada','Cultura forte, disseminada e vivida pela equipe']}
+  ]},
+  {id:'financas',label:'Finanças',icone:'💰',
+   perguntas:[
+    {q:'A empresa possui controle financeiro organizado e atualizado?',opts:['Não possui controle financeiro','Controle desorganizado e incompleto','Controle básico','Controle estruturado e frequente','Gestão financeira organizada e confiável']},
+    {q:'Como está o controle e acompanhamento do fluxo de caixa?',opts:['Não controla fluxo de caixa','Controle muito falho','Controle parcial','Fluxo de caixa bem acompanhado','Gestão estratégica e previsível do caixa']},
+    {q:'Existe separação clara entre finanças pessoais e empresariais?',opts:['Mistura total das finanças','Mistura frequente','Separação parcial','Boa separação financeira','Gestão totalmente profissionalizada']},
+    {q:'A empresa conhece e acompanha seus custos e despesas?',opts:['Não possui controle','Controle muito limitado','Conhecimento parcial dos gastos','Custos e despesas bem acompanhados','Gestão estratégica de custos e eficiência']},
+    {q:'Os preços dos produtos/serviços são calculados com base financeira?',opts:['Preços definidos sem critério','Precificação muito superficial','Precificação parcialmente estruturada','Boa metodologia de precificação','Precificação estratégica e lucrativa']},
+    {q:'A empresa acompanha indicadores financeiros e resultados?',opts:['Não acompanha indicadores','Acompanha raramente','Possui indicadores básicos','Indicadores analisados frequentemente','Gestão orientada por indicadores e dados']},
+    {q:'A empresa realiza planejamento financeiro e projeções?',opts:['Não realiza planejamento','Planejamento improvisado','Planejamento básico','Planejamento estruturado','Planejamento estratégico e previsível']},
+    {q:'Como está a saúde financeira e nível de endividamento da empresa?',opts:['Situação crítica','Alto descontrole financeiro','Situação razoável','Saúde financeira equilibrada','Empresa financeiramente saudável e sustentável']},
+    {q:'A empresa entende claramente seu lucro e rentabilidade?',opts:['Não sabe se tem lucro','Pouca clareza sobre resultados','Entendimento parcial','Boa análise de rentabilidade','Gestão estratégica focada em lucro']},
+    {q:'As decisões da empresa são tomadas com base em dados financeiros?',opts:['Decisões totalmente no "achismo"','Pouca utilização de números','Dados usados parcialmente','Boa utilização das informações financeiras','Decisões totalmente orientadas por análise financeira']}
+  ]}
+];
+
+const PRODUTOS_DIAG = {
+  comercial:{nome:'Assessoria Comercial + Tráfego Pago',desc:'Estruturação do processo comercial, funil de vendas, treinamento da equipe e geração de demanda com mídia paga para aumentar previsibilidade e volume de vendas.'},
+  marketing:{nome:'Big Bang da Marca — Social Media',desc:'Construção ou reposicionamento da identidade visual, presença digital estratégica, produção de conteúdo e gestão de redes sociais para fortalecer a marca e atrair clientes.'},
+  processos:{nome:'Assessoria Estratégica',desc:'Mapeamento e padronização de processos, implantação de ferramentas de gestão e estruturação operacional para aumentar eficiência e preparar a empresa para crescer.'},
+  pessoas:{nome:'Assessoria Estratégica',desc:'Diagnóstico organizacional, definição de estrutura de cargos, desenvolvimento de lideranças e implantação de cultura de performance e engajamento.'},
+  financas:{nome:'Assessoria Estratégica',desc:'Organização financeira, implantação de controles, precificação estratégica, planejamento financeiro e tomada de decisão orientada por dados.'}
+};
+
+const TEXTOS_DIAG = {
+  comercial:{1:'A área comercial está em estágio inicial crítico. Não há processo estruturado, prospecção consistente nem controle de leads. O negócio depende de demanda espontânea e indicações, sem previsibilidade de receita.',2:'Existem algumas iniciativas comerciais, mas faltam padronização e constância. A equipe não segue um processo claro e os indicadores são raramente acompanhados.',3:'O comercial funciona, mas com inconsistências. Há margem relevante para ganho de eficiência com padronização de processos, CRM e gestão por indicadores.',4:'A área comercial está bem estruturada, com processo definido e bons resultados. O foco agora é escalar e aumentar a previsibilidade com dados mais robustos.',5:'Excelência comercial. Processo maduro, equipe bem treinada, CRM ativo e gestão por dados. Referência em performance comercial.'},
+  marketing:{1:'A empresa praticamente não existe no mercado do ponto de vista do marketing. Sem identidade, sem presença digital e sem estratégia de atração de clientes.',2:'Presença digital fraca e sem estratégia. A marca não se comunica com clareza e perde oportunidades de negócio por falta de visibilidade.',3:'Algumas ações de marketing existem, mas faltam planejamento e consistência. A marca tem potencial, mas ainda não aproveita o digital de forma estratégica.',4:'Boa presença digital e estratégia de marketing em desenvolvimento. A empresa comunica bem seu valor e gera leads com regularidade.',5:'Marketing maduro e estratégico. Marca forte, presença digital consistente, geração previsível de leads e alinhamento total com o comercial.'},
+  processos:{1:'A operação é totalmente informal e reativa. Não há processos definidos, as responsabilidades são confusas e o negócio depende excessivamente de pessoas-chave.',2:'A empresa opera no improviso com frequência. Retrabalho e erros são comuns, e a falta de padronização gera ineficiências que custam tempo e dinheiro.',3:'Processos parcialmente estruturados, mas ainda com falhas relevantes. A empresa não está preparada para crescer sem comprometer a qualidade operacional.',4:'Operação bem estruturada com processos organizados e equipe com responsabilidades claras. A empresa tem boa base para crescimento.',5:'Excelência operacional. Processos documentados, otimizados e com cultura de melhoria contínua. A empresa está preparada para escalar com eficiência.'},
+  pessoas:{1:'A área de pessoas está em estado crítico. Não há estrutura organizacional, clima organizacional negativo e alto risco de perda de talentos.',2:'Gestão de pessoas fraca, com funções confusas, liderança falha e baixo engajamento. A empresa sofre com alta rotatividade e pouco desenvolvimento.',3:'Estrutura razoável, mas sem consistência na gestão de pessoas. Lideranças em desenvolvimento e clima organizacional que pode melhorar significativamente.',4:'Boa gestão de pessoas, com estrutura definida, liderança atuante e equipe engajada. O foco deve ser fortalecer a cultura e os ciclos de desenvolvimento.',5:'Alta maturidade em gestão de pessoas. Cultura forte, liderança estratégica, equipe engajada e processos de desenvolvimento contínuo consolidados.'},
+  financas:{1:'Situação financeira crítica. Sem controle, sem separação de contas e sem visibilidade sobre lucro ou prejuízo. Risco elevado para a continuidade do negócio.',2:'Controle financeiro muito precário. Decisões tomadas no "achismo" e sem dados confiáveis. A empresa não sabe com clareza sua situação financeira real.',3:'Controle básico existente, mas insuficiente para uma gestão profissional. Falta planejamento, indicadores e visão estratégica do financeiro.',4:'Boa gestão financeira, com controles organizados e indicadores acompanhados. O próximo passo é planejamento estratégico e uso de dados para crescimento.',5:'Excelência financeira. Gestão profissional, planejamento estratégico, indicadores robustos e decisões totalmente orientadas por dados.'}
+};
+
+const ACOES_DIAG = {
+  comercial:{1:['Criar processo comercial básico com etapas definidas (prospecção → proposta → fechamento)','Implementar rotina semanal de prospecção com metas mínimas por vendedor','Adotar uma planilha ou CRM simples para registrar todos os contatos e oportunidades'],2:['Documentar e padronizar o processo de vendas para toda a equipe','Definir indicadores básicos: número de leads, propostas enviadas e taxa de conversão','Implantar cadência de follow-up com clientes em negociação'],3:['Implantar CRM e treinar a equipe no uso consistente','Criar metas individuais e coletivas com acompanhamento semanal','Estruturar política de pós-venda e fidelização'],4:['Desenvolver previsão de vendas mensal baseada em dados do funil','Investir em capacitação contínua da equipe comercial','Integrar formalmente comercial com operação e financeiro'],5:['Expandir modelo comercial para novos mercados ou canais','Automatizar etapas do funil com ferramentas de CRM avançado','Criar programa de excelência comercial como diferencial competitivo']},
+  marketing:{1:['Contratar identidade visual profissional (logo, paleta, tipografia)','Criar perfis nas principais redes sociais e otimizar o Google Meu Negócio','Definir persona do cliente ideal antes de qualquer ação de conteúdo'],2:['Criar calendário editorial mensal com ao menos 3 publicações por semana','Produzir conteúdo que responda as dúvidas do cliente ideal','Definir orçamento mínimo para impulsionamento de posts'],3:['Estruturar estratégia de captação de leads (isca digital, formulários, tráfego pago)','Definir métricas de acompanhamento: alcance, engajamento e leads gerados','Alinhar mensagens de marketing com o discurso da equipe comercial'],4:['Investir em tráfego pago para ampliar alcance e geração de leads','Criar estratégia de conteúdo de autoridade (cases, depoimentos, bastidores)','Medir ROI por canal e realocar investimento para o mais eficiente'],5:['Criar programa de embaixadores e indicação de clientes','Desenvolver campanhas sazonais integradas com metas comerciais','Testar novos canais de aquisição e mensurar resultados com rigor']},
+  processos:{1:['Mapear os 3 processos mais críticos e criar checklist de execução','Definir responsável por cada área e comunicar formalmente as funções','Adotar uma ferramenta básica de gestão de tarefas (Trello, Notion ou similar)'],2:['Documentar processos-chave em formato simples e acessível a todos','Criar rotina de reunião semanal para alinhamento operacional','Identificar as maiores fontes de retrabalho e criar plano de eliminação'],3:['Padronizar os principais fluxos de trabalho com responsáveis e prazos','Implantar indicadores operacionais básicos por área','Criar plano de onboarding para novos colaboradores'],4:['Revisar e otimizar processos existentes buscando reduzir etapas','Avaliar automações disponíveis para tarefas repetitivas','Criar ciclo de melhoria contínua com reuniões mensais de revisão'],5:['Implementar metodologia de gestão (OKRs, BSC ou similar)','Escalar a operação com base em processos documentados e replicáveis','Criar cultura de inovação incremental na equipe']},
+  pessoas:{1:['Elaborar organograma básico e comunicar estrutura à equipe','Criar descrição de função para cada cargo existente','Estabelecer canal de comunicação interna regular (reunião semanal)'],2:['Implantar processo mínimo de seleção com critérios definidos','Realizar conversa individual com cada colaborador sobre expectativas','Mapear clima organizacional e identificar principais insatisfações'],3:['Criar plano de capacitação semestral por área','Implantar avaliação de desempenho simples e transparente','Desenvolver programa básico de onboarding para novos contratados'],4:['Criar trilhas de desenvolvimento por função','Implantar ciclos de feedback trimestrais com metas individuais','Fortalecer cultura organizacional com valores documentados e vividos'],5:['Desenvolver programa de liderança interno','Criar plano de sucessão para posições-chave','Implantar pesquisa de clima semestral com plano de ação']},
+  financas:{1:['Separar imediatamente contas PF e PJ e definir pró-labore fixo','Criar planilha de controle de entradas e saídas atualizada diariamente','Listar todas as dívidas e custos fixos para ter visão real da situação'],2:['Construir fluxo de caixa projetado para os próximos 60 dias','Calcular o ponto de equilíbrio da empresa','Definir metodologia básica de precificação para todos os produtos/serviços'],3:['Implantar DRE simplificado mensal','Criar rotina de análise financeira com frequência quinzenal','Definir indicadores financeiros básicos: margem, inadimplência e liquidez'],4:['Elaborar orçamento anual com revisões trimestrais','Avaliar e reduzir custos desnecessários com base em dados','Criar reserva de capital de giro equivalente a 2–3 meses de despesas'],5:['Implantar planejamento financeiro estratégico de longo prazo','Usar dados financeiros para decisões de investimento e expansão','Estruturar política de distribuição de lucros e reinvestimento']}
+};
+
+function pontuacaoArea(respostas, areaId) {
+  const area = AREAS_DIAG.find((a) => a.id === areaId);
+  const vals = area.perguntas.map((_, i) => {
+    const v = respostas[areaId]?.[i];
+    return v >= 0 ? v + 1 : 1;
+  });
+  return Math.round((vals.reduce((s, v) => s + v, 0) / (area.perguntas.length * 5)) * 100);
+}
+function pontuacaoGeral(respostas) {
+  return Math.round(AREAS_DIAG.reduce((s, a) => s + pontuacaoArea(respostas, a.id), 0) / AREAS_DIAG.length);
+}
+function nivelArea(score) {
+  if (score < 25) return 1; if (score < 45) return 2; if (score < 65) return 3; if (score < 85) return 4; return 5;
+}
+function statusDiag(score) {
+  if (score < 40) return { label: 'Crítico', cor: '#d3455a' };
+  if (score < 60) return { label: 'Atenção', cor: '#c2820f' };
+  if (score < 80) return { label: 'Bom', cor: '#0f8a6e' };
+  return { label: 'Excelente', cor: 'var(--navy-700)' };
+}
+function areaCompleta(respostas, areaId) {
+  return AREAS_DIAG.find((a) => a.id === areaId).perguntas.every((_, i) => respostas[areaId]?.[i] >= 0);
+}
+function todasCompletas(respostas) {
+  return AREAS_DIAG.every((a) => areaCompleta(respostas, a.id));
+}
+
+// ============================================================================
+// VIEW: DIAGNÓSTICO — LISTA (abas Externo / Ativo)
+// ============================================================================
+let _abaDiagAtual = 'externo';
+
+async function viewDiagnosticoLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Negócios</div>
+    <h1>Diagnóstico</h1>
+    <div class="tabs" style="margin-top:1.25rem">
+      <button class="tab ${_abaDiagAtual === 'externo' ? 'active' : ''}" data-tab="externo">Em negociação</button>
+      <button class="tab ${_abaDiagAtual === 'ativo' ? 'active' : ''}" data-tab="ativo">Ativos</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:1rem;flex-wrap:wrap">
+      ${htmlBusca('busca-diagnostico', 'Buscar...')}
+      <button class="btn btn-grad" onclick="toggleFormDiagnostico()">Novo diagnóstico</button>
+    </div>
+    <div id="grade-diagnostico"><p class="empty">Carregando...</p></div>
+  `;
+
+  document.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      _abaDiagAtual = btn.dataset.tab;
+      viewDiagnosticoLista();
+    });
+  });
+
+  try {
+    const { diagnosticos } = await api('diagnosticos?tipo=' + _abaDiagAtual);
+    renderGradeDiagnostico(diagnosticos || []);
+    ligarBusca('busca-diagnostico', (termo) => {
+      renderGradeDiagnostico((diagnosticos || []).filter((d) =>
+        (d.clientes?.nome || d.nome_prospect || '').toLowerCase().includes(termo)
+      ));
+    });
+  } catch (e) {
+    document.getElementById('grade-diagnostico').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function renderGradeDiagnostico(lista) {
+  const el = document.getElementById('grade-diagnostico');
+  if (!lista || lista.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum diagnóstico encontrado.</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="grade-clientes">
+      ${lista.map((d) => {
+        const nome = d.clientes?.nome || d.nome_prospect || 'Sem nome';
+        const concluido = d.status === 'concluido';
+        const score = concluido ? pontuacaoGeral(d.respostas || {}) : null;
+        const st = score !== null ? statusDiag(score) : null;
+        return `
+          <div class="card-cliente" onclick="location.hash='#/diagnostico/${d.id}'">
+            <div class="topo">
+              <div class="logo-fallback">${esc(nome.slice(0, 2))}</div>
+              <div>
+                <div class="nome-cliente">${esc(nome)}</div>
+                <div class="segmento-cliente">${esc(d.clientes?.segmento || d.segmento_prospect) || '—'}</div>
+              </div>
+            </div>
+            <div class="rodape-card">
+              <span class="pill">${concluido ? 'Concluído' : 'Em andamento'}</span>
+              ${score !== null ? `<span style="font-family:'Sora',sans-serif;font-weight:700;font-size:13px;color:${st.cor}">${score}%</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function toggleFormDiagnostico() {
+  abrirModal({
+    eyebrow: 'Negócios',
+    titulo: _abaDiagAtual === 'ativo' ? 'Novo diagnóstico (cliente ativo)' : 'Novo diagnóstico (em negociação)',
+    corpoHtml: _abaDiagAtual === 'ativo' ? `
+      <form id="form-novo-diag">
+        <div class="field"><label>Cliente</label>
+          <select name="cliente_id" id="sel-cliente-diag" required></select>
+        </div>
+        <div class="field"><label>Interlocutor</label><input name="interlocutor"></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Iniciar diagnóstico</button>
+      </form>
+    ` : `
+      <form id="form-novo-diag">
+        <div class="field"><label>Nome (prospect / empresa)</label><input name="nome_prospect" required></div>
+        <div class="field"><label>Segmento</label><input name="segmento_prospect"></div>
+        <div class="field"><label>Interlocutor</label><input name="interlocutor"></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Iniciar diagnóstico</button>
+      </form>
+    `,
+  });
+
+  if (_abaDiagAtual === 'ativo') {
+    api('clientes').then(({ clientes }) => {
+      document.getElementById('sel-cliente-diag').innerHTML =
+        '<option value="">Selecione...</option>' +
+        (clientes || []).map((c) => `<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+    });
+  }
+
+  document.getElementById('form-novo-diag').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    try {
+      const body = _abaDiagAtual === 'ativo'
+        ? { cliente_id: form.cliente_id.value, interlocutor: form.interlocutor.value }
+        : { nome_prospect: form.nome_prospect.value, segmento_prospect: form.segmento_prospect.value, interlocutor: form.interlocutor.value };
+      const { diagnostico } = await api('diagnosticos', { method: 'POST', body: JSON.stringify(body) });
+      fecharModal();
+      location.hash = '#/diagnostico/' + diagnostico.id;
+    } catch (err) { toast(err.message); }
+  });
+}
+
+// ============================================================================
+// VIEW: DIAGNÓSTICO — DETALHE (quiz ou resultado, dependendo do status)
+// ============================================================================
+let _diagAtual = null;
+let _areaDiagAtual = 0;
+
+async function viewDiagnosticoDetalhe(id) {
+  document.getElementById('main').innerHTML = `<p class="empty">Carregando...</p>`;
+  try {
+    const { diagnostico } = await api('diagnosticos?id=' + id);
+    _diagAtual = diagnostico;
+  } catch (e) {
+    document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    return;
+  }
+
+  if (_diagAtual.status === 'concluido') {
+    renderResultadoDiagnostico();
+  } else {
+    _areaDiagAtual = 0;
+    renderQuizDiagnostico();
+  }
+}
+
+function nomeDoDiag(d) {
+  return d.clientes?.nome || d.nome_prospect || 'Sem nome';
+}
+
+function renderQuizDiagnostico() {
+  const d = _diagAtual;
+  const respondidas = AREAS_DIAG.reduce((s, a) => s + a.perguntas.filter((_, i) => d.respostas[a.id]?.[i] >= 0).length, 0);
+  const total = AREAS_DIAG.reduce((s, a) => s + a.perguntas.length, 0);
+
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Diagnóstico</div>
+    <h1>${esc(nomeDoDiag(d))}</h1>
+    <p class="sub" style="margin-bottom:1rem">${d.interlocutor ? 'Interlocutor: ' + esc(d.interlocutor) : ''} · ${respondidas}/${total} perguntas respondidas</p>
+    <div class="tabs" id="tabs-area-diag">
+      ${AREAS_DIAG.map((a, i) => `<button class="tab ${i === _areaDiagAtual ? 'active' : ''}" data-area="${i}">${a.icone} ${a.label}</button>`).join('')}
+    </div>
+    <div id="perguntas-area"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:1.5rem">
+      <button class="btn btn-grad" id="btn-finalizar-diag" ${todasCompletas(d.respostas) ? '' : 'disabled'}>Finalizar diagnóstico</button>
+    </div>
+  `;
+
+  document.querySelectorAll('#tabs-area-diag .tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      _areaDiagAtual = Number(btn.dataset.area);
+      renderQuizDiagnostico();
+    });
+  });
+
+  document.getElementById('btn-finalizar-diag').addEventListener('click', finalizarDiagnostico);
+
+  renderPerguntasArea();
+}
+
+function renderPerguntasArea() {
+  const d = _diagAtual;
+  const area = AREAS_DIAG[_areaDiagAtual];
+  document.getElementById('perguntas-area').innerHTML = area.perguntas.map((p, i) => {
+    const valorAtual = d.respostas[area.id]?.[i];
+    return `
+      <div class="card" style="margin-bottom:.75rem">
+        <div style="font-size:13.5px;font-weight:600;color:var(--navy-700);margin-bottom:.7rem">${i + 1}. ${esc(p.q)}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${p.opts.map((opt, oi) => `
+            <label style="display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--ink-soft);cursor:pointer;padding:6px 8px;border-radius:6px;
+              background:${valorAtual === oi ? 'var(--teal-soft)' : 'transparent'}">
+              <input type="radio" name="p${i}" ${valorAtual === oi ? 'checked' : ''} onchange="responderPergunta('${area.id}', ${i}, ${oi})" style="margin-top:2px">
+              ${esc(opt)}
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function responderPergunta(areaId, perguntaIndex, valor) {
+  const d = _diagAtual;
+  if (!d.respostas[areaId]) d.respostas[areaId] = {};
+  d.respostas[areaId][perguntaIndex] = valor;
+
+  try {
+    await api('diagnosticos?id=' + d.id, { method: 'PATCH', body: JSON.stringify({ respostas: d.respostas }) });
+  } catch (e) { toast(e.message); }
+
+  document.getElementById('btn-finalizar-diag').disabled = !todasCompletas(d.respostas);
+}
+
+async function finalizarDiagnostico() {
+  const d = _diagAtual;
+  const resultado = {
+    geral: pontuacaoGeral(d.respostas),
+    areas: AREAS_DIAG.reduce((acc, a) => { acc[a.id] = pontuacaoArea(d.respostas, a.id); return acc; }, {}),
+  };
+  try {
+    const { diagnostico } = await api('diagnosticos?id=' + d.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'concluido', resultado }),
+    });
+    _diagAtual = diagnostico;
+    toast('Diagnóstico concluído');
+    renderResultadoDiagnostico();
+  } catch (e) { toast(e.message); }
+}
+
+function renderResultadoDiagnostico() {
+  const d = _diagAtual;
+  const geral = pontuacaoGeral(d.respostas);
+  const stGeral = statusDiag(geral);
+  const scores = AREAS_DIAG.map((a) => ({ ...a, score: pontuacaoArea(d.respostas, a.id) }));
+  const ordenadas = [...scores].sort((a, b) => a.score - b.score);
+
+  document.getElementById('main').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div class="eyebrow">Diagnóstico concluído</div>
+        <h1>${esc(nomeDoDiag(d))}</h1>
+        ${d.interlocutor ? `<p class="sub">Interlocutor: ${esc(d.interlocutor)}</p>` : ''}
+      </div>
+      <button class="btn btn-outline" onclick="location.hash='#/diagnostico'">← Voltar</button>
+    </div>
+
+    <div class="card" style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.25rem">
+      <div style="font-family:'Sora',sans-serif;font-size:42px;font-weight:700;color:${stGeral.cor}">${geral}<span style="font-size:20px">%</span></div>
+      <div>
+        <div style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--navy-700)">Maturidade geral do negócio</div>
+        <span class="pill" style="margin-top:4px">${stGeral.label}</span>
+      </div>
+    </div>
+
+    <div class="grade-clientes" style="margin-bottom:1.5rem">
+      ${scores.map((a) => {
+        const st = statusDiag(a.score);
+        return `
+          <div class="card" style="text-align:center">
+            <div style="font-size:22px;margin-bottom:6px">${a.icone}</div>
+            <div style="font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;color:var(--navy-700)">${a.label}</div>
+            <div style="font-family:'Sora',sans-serif;font-size:24px;font-weight:700;color:${st.cor};margin:4px 0">${a.score}%</div>
+            <div class="prog-track"><div class="prog-fill" style="width:${a.score}%;background:${st.cor}"></div></div>
+            <div style="font-size:11px;color:${st.cor};margin-top:6px;font-weight:600">${st.label}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin-bottom:.9rem">Diagnóstico por área</h2>
+    ${scores.map((a, idx) => {
+      const nivel = nivelArea(a.score);
+      const texto = TEXTOS_DIAG[a.id][nivel];
+      const acoes = ACOES_DIAG[a.id][nivel];
+      const prod = PRODUTOS_DIAG[a.id];
+      const st = statusDiag(a.score);
+      return `
+        <details class="card" style="margin-bottom:.75rem" ${idx === 0 ? 'open' : ''}>
+          <summary style="cursor:pointer;display:flex;align-items:center;gap:10px;font-family:'Sora',sans-serif;font-weight:600;color:var(--navy-700)">
+            <span>${a.icone}</span><span style="flex:1">${a.label}</span><span style="color:${st.cor}">${a.score}%</span>
+          </summary>
+          <div style="margin-top:1rem">
+            <p class="sub" style="font-size:13px;color:var(--ink-soft);line-height:1.6">${esc(texto)}</p>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin:1rem 0 .5rem">Ações prioritárias</div>
+            ${acoes.map((ac) => `<div style="font-size:13px;color:var(--ink-soft);margin-bottom:6px;padding-left:14px;border-left:2px solid var(--teal)">${esc(ac)}</div>`).join('')}
+            ${a.score < 65 ? `
+              <div style="background:var(--paper);border-radius:8px;padding:.9rem 1rem;margin-top:1rem">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--teal-deep);margin-bottom:4px">Solução D2N indicada</div>
+                <div style="font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;color:var(--navy-700)">${esc(prod.nome)}</div>
+                <div style="font-size:12.5px;color:var(--ink-soft);margin-top:3px">${esc(prod.desc)}</div>
+              </div>
+            ` : ''}
+          </div>
+        </details>
+      `;
+    }).join('')}
+
+    <div style="display:flex;gap:10px;margin-top:1rem">
+      <button class="btn btn-outline" onclick="window.print()">Imprimir / Exportar PDF</button>
+      <button class="btn btn-outline" onclick="refazerDiagnostico()">Refazer diagnóstico</button>
+    </div>
+  `;
+}
+
+async function refazerDiagnostico() {
+  try {
+    const { diagnostico } = await api('diagnosticos?id=' + _diagAtual.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'rascunho', respostas: {} }),
+    });
+    _diagAtual = diagnostico;
+    _areaDiagAtual = 0;
+    renderQuizDiagnostico();
+  } catch (e) { toast(e.message); }
+}
+</script>
+</body>
+</html>
