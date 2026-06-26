@@ -183,6 +183,131 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .card-cliente .nome-cliente{font-family:'Sora',sans-serif;font-size:14px;font-weight:600;color:var(--navy-700);line-height:1.3}
 .card-cliente .segmento-cliente{font-size:11.5px;color:var(--ink-faint);margin-top:1px}
 .card-cliente .rodape-card{display:flex;justify-content:space-between;align-items:center;margin-top:.4rem}
+/* ── ASSESSORIA: editor de relatório ────────────────────── */
+.ae-shell{display:flex;gap:1.5rem;align-items:flex-start}
+.ae-side{width:222px;flex-shrink:0;background:var(--grad-navy);border-radius:var(--r-lg);padding:1.25rem 1rem;position:sticky;top:1rem;box-shadow:var(--shadow-md)}
+.ae-side-name{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:#fff;margin-bottom:2px;word-break:break-word}
+.ae-side-sub{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:1.1rem}
+.ae-nav{display:flex;flex-direction:column;gap:4px;margin-bottom:1.25rem}
+.ae-nav button{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;border:none;background:none;color:rgba(255,255,255,.7);font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;text-align:left;cursor:pointer;transition:.15s;width:100%}
+.ae-nav button:hover{background:rgba(255,255,255,.08);color:#fff}
+.ae-nav button.active{background:var(--teal);color:var(--navy-900)}
+.ae-side-foot{display:flex;flex-direction:column;gap:8px;padding-top:1rem;border-top:1px solid rgba(255,255,255,.12)}
+.ae-save{font-size:10.5px;color:var(--teal);text-align:center;height:14px;opacity:0;transition:opacity .3s}
+.ae-btn-full{width:100%;padding:9px;border:none;border-radius:9px;font-family:'Sora',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:.15s}
+.ae-btn-full.primary{background:var(--teal);color:var(--navy-900)}
+.ae-btn-full.primary:hover{background:var(--teal-deep)}
+.ae-btn-full.ghost{background:rgba(255,255,255,.08);color:#fff}
+.ae-btn-full.ghost:hover{background:rgba(255,255,255,.16)}
+.ae-back{display:flex;align-items:center;gap:6px;font-size:11.5px;color:rgba(255,255,255,.55);background:none;border:none;cursor:pointer;padding:6px 4px;width:100%}
+.ae-back:hover{color:#fff}
+.ae-main{flex:1;min-width:0}
+.ae-section{display:none}
+.ae-section.active{display:block}
+.ae-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:1.4rem;margin-bottom:1rem;box-shadow:var(--shadow-sm)}
+.ae-card-title{font-family:'Sora',sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--teal-deep);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.ae-card-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.ae-row{display:grid;gap:1rem;margin-bottom:1rem}
+.ae-row.c2{grid-template-columns:1fr 1fr}
+.ae-row.c3{grid-template-columns:1fr 1fr 1fr}
+.ae-field label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.ae-field input,.ae-field textarea,.ae-field select{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-family:'Barlow',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border-color .15s}
+.ae-field input:focus,.ae-field textarea:focus,.ae-field select:focus{border-color:var(--teal)}
+.ae-field textarea{resize:vertical;min-height:74px}
+.ae-tip{font-size:12px;color:var(--ink-soft);background:var(--teal-soft);border-left:3px solid var(--teal);border-radius:7px;padding:8px 12px;margin-bottom:.9rem}
+.ae-dt{width:100%;border-collapse:collapse}
+.ae-dt th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+.ae-dt td{padding:4px 4px}
+.ae-dt td input,.ae-dt td select{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:13px;color:var(--ink);width:100%;outline:none}
+.ae-dt td input:focus,.ae-dt td select:focus{border-color:var(--teal)}
+.ae-rnum{font-family:monospace;font-size:10px;color:var(--ink-faint);text-align:center}
+.ae-sub-item{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.ae-sub-item input{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:13.5px;color:var(--ink);outline:none}
+.ae-sub-item input:focus{border-color:var(--teal)}
+.ae-del{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:14px;width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.ae-del:hover{background:#fde8ea;color:#d3455a}
+.ae-okr-item{display:grid;grid-template-columns:1fr 90px;gap:9px;align-items:center;margin-bottom:7px}
+.ae-okr-item input[type=text]{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--ink);outline:none;width:100%}
+.ae-okr-item input[type=number]{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 9px;font-size:13px;color:var(--teal-deep);font-weight:700;outline:none;width:100%;text-align:center}
+.ae-okr-item input:focus{border-color:var(--teal)}
+.ae-kr-hdr{display:grid;grid-template-columns:1fr 90px;gap:9px;margin-bottom:6px}
+.ae-kr-hdr span{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em}
+.ae-add{font-size:11.5px;padding:6px 12px;background:var(--paper);border:1px solid var(--line);border-radius:7px;color:var(--ink-soft);cursor:pointer;font-weight:600;transition:.15s}
+.ae-add:hover{border-color:var(--teal);color:var(--teal-deep)}
+.ae-atd-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.ae-atd-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.ae-atd-tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);transition:.15s}
+.ae-atd-tab:hover{border-color:var(--teal)}
+.ae-atd-tab.active{background:var(--navy-700);color:#fff;border-color:var(--navy-700)}
+.ae-atd-tab .ae-del-tab{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;opacity:.6}
+.ae-atd-tab .ae-del-tab:hover{opacity:1}
+.ae-pillar-n{background:var(--teal);color:var(--navy-900);font-family:'Sora',sans-serif;font-weight:700;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#ae-preview{display:none;position:fixed;inset:0;background:rgba(10,22,40,.85);z-index:1000;overflow-y:auto;padding:24px;justify-content:center}
+#ae-preview.open{display:flex}
+.ae-preview-close{position:fixed;top:18px;right:18px;background:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:15px;font-weight:700;cursor:pointer;z-index:1001;box-shadow:var(--shadow-md)}
+.ae-preview-inner{background:#fff;border-radius:14px;overflow:hidden;width:840px;max-width:100%}
+.report{font-family:'Barlow',sans-serif;color:#1a1a1a;background:#fff}
+.rh{background:var(--navy-900);padding:20px 30px;display:flex;align-items:center;justify-content:space-between}
+.rh-year{background:var(--teal);color:var(--navy-900);font-family:'Sora',sans-serif;font-weight:700;font-size:19px;padding:6px 16px;border-radius:7px}
+.rcov{background:var(--navy-900);min-height:340px;display:flex;flex-direction:column;justify-content:flex-end;padding:40px 34px 30px;position:relative}
+.rcov::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(34,211,211,.12) 0%,transparent 55%)}
+.rcov-t{font-family:'Sora',sans-serif;font-weight:700;font-size:54px;color:#fff;line-height:1.05;letter-spacing:.5px;position:relative}
+.rcov-rule{width:100%;height:2px;background:rgba(255,255,255,.12);margin:14px 0 9px}
+.rcov-name{font-weight:700;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#fff;position:relative}
+.rcov-cons{font-weight:700;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:30px;position:relative}
+.rs{padding:26px 32px;border-bottom:1px solid var(--line)}
+.rs:last-child{border-bottom:none}
+.rs-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.rs-title{font-family:'Sora',sans-serif;font-weight:700;font-size:24px;color:var(--navy-900)}
+.rs-badge{background:var(--navy-900);color:#fff;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px}
+.r2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.rbox{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:15px}
+.rbox h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:10px}
+.rsub-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;font-size:12.5px;color:var(--ink-soft);line-height:1.4}
+.rcheck{width:11px;height:11px;border:2px solid var(--ink-faint);border-radius:3px;flex-shrink:0;margin-top:2px}
+.rmt{width:100%;border-collapse:collapse}
+.rmt th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);padding:5px 7px;border-bottom:1px solid var(--line);text-align:left}
+.rmt td{padding:6px 7px;font-size:12px;color:var(--ink-faint);border-bottom:1px solid var(--paper)}
+.rtasks{width:100%;border-collapse:collapse}
+.rtasks thead th{background:var(--navy-900);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left}
+.rtasks tbody tr:nth-child(even){background:var(--paper)}
+.rtasks tbody td{padding:7px 12px;font-size:12.5px;color:var(--ink-soft);border-bottom:1px solid var(--line)}
+.rtasks tbody td:first-child{font-family:monospace;color:var(--ink-faint);font-size:10px;font-weight:700;text-align:center;width:28px}
+.tdone{text-decoration:line-through;color:var(--ink-faint)!important}
+.tresp{font-weight:700;color:var(--navy-900)!important}
+.rsig{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:16px;margin-top:14px}
+.rsig h4{font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:22px}
+.rsig-line{width:50%;height:1px;background:var(--ink-faint);margin:0 auto}
+.rintro{font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:18px;text-align:justify}
+.rpillar{display:grid;grid-template-columns:46px 1fr;margin-bottom:10px;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.rpillar-n{background:var(--teal);color:var(--navy-900);font-family:'Sora',sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center}
+.rpillar-c{padding:11px 14px;background:#fff}
+.rpillar-tag{display:inline-flex;align-items:center;gap:5px;background:var(--navy-900);color:#fff;font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:4px;margin-bottom:5px}
+.rpillar-desc{font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+.rsvc{width:100%;border-collapse:collapse;margin-bottom:18px}
+.rsvc th{background:var(--navy-900);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left}
+.rsvc td{padding:8px 12px;font-size:12.5px;color:var(--ink-soft);background:var(--paper);border-bottom:1px solid var(--line)}
+.rokrg{margin-bottom:18px}
+.rokr-h{font-size:12.5px;font-weight:700;color:var(--navy-900);line-height:1.4;margin-bottom:8px;padding:8px 12px;background:var(--paper);border-left:4px solid var(--teal);border-radius:0 7px 7px 0}
+.rkr{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--paper)}
+.rkr:last-child{border-bottom:none}
+.rkr-l{flex:1;font-size:12.5px;color:var(--ink-soft)}
+.rkr-bw{width:90px;height:6px;background:var(--line);border-radius:4px;flex-shrink:0}
+.rkr-b{height:100%;border-radius:4px}
+.rkr-p{font-family:monospace;font-size:11.5px;font-weight:700;width:30px;text-align:right;flex-shrink:0}
+.rback{background:var(--navy-900);min-height:120px;display:flex;align-items:center;justify-content:center;padding:26px}
+@media print{
+  body *{visibility:hidden}
+  #ae-preview, #ae-preview *{visibility:visible}
+  #ae-preview{position:absolute;inset:0;background:#fff;padding:0}
+  .ae-preview-close{display:none}
+  .ae-preview-inner{width:100%}
+}
+@media(max-width:980px){
+  .ae-shell{flex-direction:column}
+  .ae-side{width:100%;position:static}
+  .ae-row.c2,.ae-row.c3{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -225,6 +350,11 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 
 <div class="modal-overlay hidden" id="modal-overlay" onclick="if(event.target===this) fecharModal()">
   <div class="modal-card" id="modal-card"></div>
+</div>
+
+<div id="ae-preview">
+  <button class="ae-preview-close" onclick="document.getElementById('ae-preview').classList.remove('open')">✕</button>
+  <div class="ae-preview-inner"><div id="ae-preview-content" class="report"></div></div>
 </div>
 
 <script>
@@ -1084,230 +1214,399 @@ async function viewAssessoriaLista() {
 }
 
 // ============================================================================
-// VIEW: ASSESSORIA — DETALHE DO CLIENTE (Sessões / Planejamento / OKRs)
+// MÓDULO: ASSESSORIA — Editor de Relatório (Capa / Plano / Estratégico / Tático)
 // ============================================================================
-const PILARES = ['Comercial', 'Marketing', 'Processos', 'Pessoas', 'Finanças'];
-let abaAtual = 'sessoes';
+let aeClienteId = null;
+let aeCliente = null;
+let aeData = null;
+let aeCurrentAtd = 0;
+let aeSaveTimer = null;
+
+function aeDefAtd() {
+  return { title: '', date: '', subjects: [''], meetings: [{ date: '', time: '', dur: '' }], obs: '', tasks: [{ label: '', resp: '', dl: '', done: false }] };
+}
+
+function aeDef(cliente) {
+  const ano = String(new Date().getFullYear());
+  return {
+    name: cliente?.nome || '', year: ano, cons: '', brand: cliente?.nome || '', seg: cliente?.segmento || '',
+    intro: 'Este quadro estratégico reúne as metas prioritárias que irão nortear toda a assessoria, servindo como base para as decisões estratégicas, táticas e operacionais do negócio. Cada meta foi definida para atuar diretamente na sustentabilidade, crescimento e profissionalização da gestão.',
+    pillars: [
+      { name: 'Finanças', desc: 'Garantir previsibilidade financeira mensal para sustentar decisões estratégicas, promover estabilidade e viabilizar o crescimento saudável da empresa.' },
+      { name: 'Parcerias', desc: 'Atrair e consolidar parcerias estratégicas para otimizar recursos, ampliar a oferta de serviços e fortalecer o posicionamento da empresa.' },
+      { name: 'Comercial', desc: 'Estruturar a prospecção contínua de clientes para garantir fluxo constante de atendimentos, aumento de faturamento e crescimento sustentável.' },
+      { name: 'Processos', desc: 'Organizar e padronizar os processos da empresa para aumentar eficiência operacional, reduzir retrabalho e sustentar o crescimento com qualidade.' },
+      { name: 'Pessoas', desc: 'Desenvolver a liderança da empresa para fortalecer a tomada de decisão, engajar a equipe e sustentar resultados de forma consistente.' },
+    ],
+    atendimentos: [aeDefAtd()],
+    svc: '', per: '12 meses', hrs: '',
+    okrs: [
+      { obj: 'Garantir previsibilidade financeira mensal para sustentar decisões estratégicas, promover estabilidade e viabilizar o crescimento saudável da empresa.', krs: [{ l: '', p: 0 }] },
+      { obj: 'Atrair e consolidar parcerias estratégicas para otimizar recursos, ampliar a oferta de serviços e fortalecer o posicionamento da empresa.', krs: [{ l: '', p: 0 }] },
+      { obj: 'Estruturar a prospecção contínua de clientes para garantir fluxo constante de atendimentos, aumento de faturamento e crescimento sustentável.', krs: [{ l: '', p: 0 }] },
+      { obj: 'Organizar e padronizar os processos da empresa para aumentar eficiência operacional, reduzir retrabalho e sustentar o crescimento com qualidade.', krs: [{ l: '', p: 0 }] },
+      { obj: 'Desenvolver a liderança da empresa para fortalecer a tomada de decisão, engajar a equipe e sustentar resultados de forma consistente.', krs: [{ l: '', p: 0 }] },
+    ],
+  };
+}
 
 async function viewAssessoriaDetalhe(clienteId) {
   document.getElementById('main').innerHTML = `<p class="empty">Carregando...</p>`;
+  aeClienteId = clienteId;
 
-  let cliente;
   try {
-    ({ cliente } = await api('clientes?id=' + clienteId));
+    const { cliente } = await api('clientes?id=' + clienteId);
+    aeCliente = cliente;
+    const { dados } = await api('assessoria-relatorio?cliente_id=' + clienteId);
+    aeData = dados && Object.keys(dados).length ? dados : aeDef(cliente);
   } catch (e) {
     document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
     return;
   }
 
-  abaAtual = 'sessoes';
+  aeCurrentAtd = 0;
+
   document.getElementById('main').innerHTML = `
-    <div class="eyebrow">Plano de Assessoria</div>
-    <h1>${esc(cliente.nome)}</h1>
-    <p class="sub" style="margin-bottom:1.5rem">${cliente.interlocutor ? 'Interlocutor: ' + esc(cliente.interlocutor) : ''}</p>
-
-    <div class="tabs">
-      <button class="tab active" data-tab="sessoes">Sessões de atendimento</button>
-      <button class="tab" data-tab="planejamento">Planejamento estratégico</button>
-      <button class="tab" data-tab="okrs">Plano tático (OKRs)</button>
-    </div>
-    <div id="conteudo-aba"></div>
-  `;
-
-  document.querySelectorAll('.tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      abaAtual = btn.dataset.tab;
-      renderAba(clienteId);
-    });
-  });
-
-  renderAba(clienteId);
-}
-
-async function renderAba(clienteId) {
-  const el = document.getElementById('conteudo-aba');
-  el.innerHTML = `<p class="empty">Carregando...</p>`;
-
-  if (abaAtual === 'sessoes') return renderAbaSessoes(clienteId, el);
-  if (abaAtual === 'planejamento') return renderAbaPlanejamento(clienteId, el);
-  if (abaAtual === 'okrs') return renderAbaOkrs(clienteId, el);
-}
-
-// --- Sessões ---
-async function renderAbaSessoes(clienteId, el) {
-  const { sessoes } = await api('sessoes?cliente_id=' + clienteId);
-  el.innerHTML = `
-    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
-      <button class="btn btn-grad" onclick="toggleFormSessao('${clienteId}')">Nova sessão</button>
-    </div>
-    <div id="lista-sessoes">
-      ${(!sessoes || sessoes.length === 0) ? `<div class="card"><p class="empty">Nenhuma sessão registrada ainda.</p></div>` :
-        sessoes.map((s) => `
-          <div class="card" style="margin-bottom:.75rem">
-            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-              <strong style="font-family:'Sora',sans-serif;color:var(--navy)">${esc(s.titulo)}</strong>
-              <span class="sub">${new Date(s.data_sessao + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
-            </div>
-            ${s.pauta ? `<p class="sub"><strong>Pauta:</strong> ${esc(s.pauta)}</p>` : ''}
-            ${s.resumo ? `<p class="sub" style="margin-top:4px"><strong>Resumo:</strong> ${esc(s.resumo)}</p>` : ''}
-            ${s.encaminhamentos ? `<p class="sub" style="margin-top:4px"><strong>Encaminhamentos:</strong> ${esc(s.encaminhamentos)}</p>` : ''}
-          </div>
-        `).join('')}
-    </div>
-  `;
-}
-
-function toggleFormSessao(clienteId) {
-  abrirModal({
-    eyebrow: 'Assessoria',
-    titulo: 'Nova sessão de atendimento',
-    corpoHtml: `
-      <form id="form-nova-sessao">
-        <div class="grid2">
-          <div class="field"><label>Título</label><input name="titulo" required></div>
-          <div class="field"><label>Data</label><input type="date" name="data_sessao" required></div>
+    <div class="ae-shell">
+      <nav class="ae-side">
+        <div class="ae-side-name" id="ae-side-name">${esc(aeData.name || aeCliente.nome)}</div>
+        <div class="ae-side-sub">Relatório ${esc(aeData.year)}</div>
+        <div class="ae-nav" id="ae-nav">
+          <button class="active" data-sec="capa" onclick="aeGoSec('capa', this)">Capa</button>
+          <button data-sec="plano" onclick="aeGoSec('plano', this)">Plano de Assessoria</button>
+          <button data-sec="estrategico" onclick="aeGoSec('estrategico', this)">Estratégico</button>
+          <button data-sec="tatico" onclick="aeGoSec('tatico', this)">Plano Tático</button>
         </div>
-        <div class="field"><label>Pauta</label><textarea name="pauta" rows="2"></textarea></div>
-        <div class="field"><label>Resumo da sessão</label><textarea name="resumo" rows="2"></textarea></div>
-        <div class="field"><label>Encaminhamentos</label><textarea name="encaminhamentos" rows="2"></textarea></div>
-        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar sessão</button>
-      </form>
-    `,
-  });
-  document.getElementById('form-nova-sessao').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const f = e.target;
-    try {
-      await api('sessoes', {
-        method: 'POST',
-        body: JSON.stringify({
-          cliente_id: clienteId,
-          titulo: f.titulo.value,
-          data_sessao: f.data_sessao.value,
-          pauta: f.pauta.value,
-          resumo: f.resumo.value,
-          encaminhamentos: f.encaminhamentos.value,
-        }),
-      });
-      toast('Sessão salva');
-      fecharModal();
-      renderAba(clienteId);
-    } catch (err) { toast(err.message); }
-  });
-}
+        <div class="ae-side-foot">
+          <div class="ae-save" id="ae-save">Salvo automaticamente</div>
+          <button class="ae-btn-full primary" onclick="aeGenerateReport()">Gerar relatório</button>
+          <button class="ae-btn-full ghost" onclick="aePrintReport()">Imprimir / PDF</button>
+          <button class="ae-back" onclick="location.hash='#/assessoria'">← Voltar para Assessoria</button>
+        </div>
+      </nav>
 
-// --- Planejamento (5 pilares) ---
-async function renderAbaPlanejamento(clienteId, el) {
-  const { planejamento } = await api('planejamento?cliente_id=' + clienteId);
-  const porPilar = {};
-  (planejamento || []).forEach((p) => (porPilar[p.pilar] = p));
-
-  el.innerHTML = PILARES.map((pilar, i) => {
-    const atual = porPilar[pilar] || {};
-    return `
-      <details class="card" style="margin-bottom:.75rem" ${i === 0 ? 'open' : ''}>
-        <summary style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;color:var(--navy);font-weight:700;cursor:pointer">${pilar}</summary>
-        <form class="form-pilar" data-pilar="${pilar}" style="margin-top:1rem">
-          <div class="field"><label>Objetivo</label><textarea name="objetivo" rows="2">${esc(atual.objetivo)}</textarea></div>
-          <div class="field"><label>Diagnóstico</label><textarea name="diagnostico" rows="2">${esc(atual.diagnostico)}</textarea></div>
-          <div class="field"><label>Estratégia</label><textarea name="estrategia" rows="2">${esc(atual.estrategia)}</textarea></div>
-          <button class="btn btn-navy" type="submit">Salvar ${pilar}</button>
-        </form>
-      </details>
-    `;
-  }).join('');
-
-  document.querySelectorAll('.form-pilar').forEach((form) => {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      try {
-        await api('planejamento', {
-          method: 'POST',
-          body: JSON.stringify({
-            cliente_id: clienteId,
-            pilar: form.dataset.pilar,
-            objetivo: form.objetivo.value,
-            diagnostico: form.diagnostico.value,
-            estrategia: form.estrategia.value,
-          }),
-        });
-        toast(form.dataset.pilar + ' salvo');
-      } catch (err) { toast(err.message); }
-    });
-  });
-}
-
-// --- OKRs ---
-async function renderAbaOkrs(clienteId, el) {
-  const { okrs } = await api('okrs?cliente_id=' + clienteId);
-  el.innerHTML = `
-    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
-      <button class="btn btn-grad" onclick="toggleFormOkr('${clienteId}')">Novo OKR</button>
-    </div>
-    <div id="lista-okrs">
-      ${(!okrs || okrs.length === 0) ? `<div class="card"><p class="empty">Nenhum OKR cadastrado ainda.</p></div>` :
-        okrs.map((o) => `
-          <div class="card" style="margin-bottom:.75rem">
-            <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(o.objetivo)}</div>
-            <div class="sub" style="margin:2px 0 8px">${esc(o.resultado_chave)}</div>
-            <div class="prog-row">
-              <div class="prog-track"><div class="prog-fill" style="width:${o.progresso}%"></div></div>
-              <input class="prog-input" type="number" min="0" max="100" value="${o.progresso}"
-                onchange="atualizarOkr('${o.id}', this.value, '${clienteId}')">
-              <span class="sub">%</span>
+      <div class="ae-main">
+        <!-- CAPA -->
+        <div id="ae-sec-capa" class="ae-section active">
+          <div class="eyebrow">Plano de Assessoria</div>
+          <h1>Capa</h1>
+          <p class="sub" style="margin-bottom:1rem">Informações gerais do relatório</p>
+          <div class="ae-card">
+            <div class="ae-card-title">Identificação</div>
+            <div class="ae-row c2">
+              <div class="ae-field"><label>Nome do cliente</label><input id="ae-f-name" oninput="aeAutosave()"></div>
+              <div class="ae-field"><label>Ano do relatório</label><input id="ae-f-year" oninput="aeAutosave()"></div>
             </div>
-            ${o.prazo ? `<div class="sub" style="margin-top:6px">Prazo: ${new Date(o.prazo + 'T00:00:00').toLocaleDateString('pt-BR')}</div>` : ''}
+            <div class="ae-row c2">
+              <div class="ae-field"><label>Consultor(es)</label><input id="ae-f-cons" oninput="aeAutosave()"></div>
+              <div class="ae-field"><label>Marca / Interlocutor</label><input id="ae-f-brand" oninput="aeAutosave()"></div>
+            </div>
           </div>
-        `).join('')}
+        </div>
+
+        <!-- PLANO DE ASSESSORIA -->
+        <div id="ae-sec-plano" class="ae-section">
+          <div class="eyebrow">Plano de Assessoria</div>
+          <h1>Histórico de Atendimentos</h1>
+          <p class="sub" style="margin-bottom:1rem">Cada atendimento gera um relatório próprio</p>
+          <div class="ae-atd-header">
+            <div class="ae-atd-tabs" id="ae-atd-tabs"></div>
+            <button class="ae-add" onclick="aeAddAtendimento()">+ Atendimento</button>
+          </div>
+          <div id="ae-atd-content"></div>
+        </div>
+
+        <!-- ESTRATÉGICO -->
+        <div id="ae-sec-estrategico" class="ae-section">
+          <div class="eyebrow">Plano de Assessoria</div>
+          <h1>Planejamento Estratégico</h1>
+          <p class="sub" style="margin-bottom:1rem">Pilares estratégicos do período</p>
+          <div class="ae-card">
+            <div class="ae-card-title">Introdução</div>
+            <div class="ae-field"><textarea id="ae-f-intro" rows="4" oninput="aeAutosave()"></textarea></div>
+          </div>
+          <div id="ae-pillar-list"></div>
+        </div>
+
+        <!-- TÁTICO -->
+        <div id="ae-sec-tatico" class="ae-section">
+          <div class="eyebrow">Plano de Assessoria</div>
+          <h1>Plano de Ação Tático</h1>
+          <p class="sub" style="margin-bottom:1rem">OKRs e Key Results com percentual de progresso</p>
+          <div class="ae-card">
+            <div class="ae-card-title">Informações do serviço</div>
+            <div class="ae-row c3">
+              <div class="ae-field"><label>Serviços</label><input id="ae-f-svc" oninput="aeAutosave()"></div>
+              <div class="ae-field"><label>Período</label><input id="ae-f-per" oninput="aeAutosave()"></div>
+              <div class="ae-field"><label>Horas / mês</label><input id="ae-f-hrs" oninput="aeAutosave()"></div>
+            </div>
+          </div>
+          <div id="ae-okr-list"></div>
+        </div>
+      </div>
     </div>
   `;
+
+  aeLoadIntoDom();
 }
 
-function toggleFormOkr(clienteId) {
-  abrirModal({
-    eyebrow: 'Assessoria',
-    titulo: 'Novo OKR',
-    corpoHtml: `
-      <form id="form-novo-okr">
-        <div class="field"><label>Objetivo</label><input name="objetivo" required></div>
-        <div class="field"><label>Resultado-chave</label><input name="resultado_chave" required></div>
-        <div class="grid2">
-          <div class="field"><label>Progresso inicial (%)</label><input type="number" name="progresso" min="0" max="100" value="0"></div>
-          <div class="field"><label>Prazo</label><input type="date" name="prazo"></div>
-        </div>
-        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar OKR</button>
-      </form>
-    `,
-  });
-  document.getElementById('form-novo-okr').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const f = e.target;
-    try {
-      await api('okrs', {
-        method: 'POST',
-        body: JSON.stringify({
-          cliente_id: clienteId,
-          objetivo: f.objetivo.value,
-          resultado_chave: f.resultado_chave.value,
-          progresso: f.progresso.value,
-          prazo: f.prazo.value,
-        }),
-      });
-      toast('OKR salvo');
-      fecharModal();
-      renderAba(clienteId);
-    } catch (err) { toast(err.message); }
-  });
+function aeGoSec(name, btn) {
+  document.querySelectorAll('.ae-section').forEach((s) => s.classList.remove('active'));
+  document.querySelectorAll('#ae-nav button').forEach((b) => b.classList.remove('active'));
+  document.getElementById('ae-sec-' + name).classList.add('active');
+  btn.classList.add('active');
 }
 
-async function atualizarOkr(id, progresso, clienteId) {
+function aeSet(id, v) { const el = document.getElementById(id); if (el) el.value = v || ''; }
+
+function aeLoadIntoDom() {
+  const d = aeData;
+  aeSet('ae-f-name', d.name); aeSet('ae-f-year', d.year); aeSet('ae-f-cons', d.cons); aeSet('ae-f-brand', d.brand);
+  aeSet('ae-f-intro', d.intro);
+  aeSet('ae-f-svc', d.svc); aeSet('ae-f-per', d.per); aeSet('ae-f-hrs', d.hrs);
+  aeLoadAtds(d.atendimentos);
+  const pl = document.getElementById('ae-pillar-list'); pl.innerHTML = '';
+  (d.pillars || []).forEach((p, i) => aeAddPillarDom(p, i));
+  const ol = document.getElementById('ae-okr-list'); ol.innerHTML = '';
+  (d.okrs || []).forEach((o, i) => aeAddOkrDom(o, i));
+}
+
+// ── ATENDIMENTOS ─────────────────────────────────────────
+function aeLoadAtds(atds) {
+  if (!atds || !atds.length) atds = [aeDefAtd()];
+  aeCurrentAtd = 0;
+  aeRenderAtdTabs(atds);
+  aeRenderAtdPanel(atds[0], 0);
+}
+
+function aeRenderAtdTabs(atds) {
+  document.getElementById('ae-atd-tabs').innerHTML = atds.map((a, i) => `
+    <button class="ae-atd-tab ${i === aeCurrentAtd ? 'active' : ''}" onclick="aeSwitchAtd(${i})">
+      ${esc(a.title) || 'Atendimento ' + (i + 1)}
+      <span class="ae-del-tab" onclick="event.stopPropagation();aeRemoveAtd(${i})">✕</span>
+    </button>`).join('');
+}
+
+function aeRenderAtdPanel(atd, idx) {
+  document.getElementById('ae-atd-content').innerHTML = `
+    <div class="ae-card">
+      <div class="ae-card-title">Identificação do atendimento</div>
+      <div class="ae-row c2">
+        <div class="ae-field"><label>Título do atendimento</label><input id="ae-atd-title-${idx}" placeholder="Ex: Reunião de alinhamento mensal" value="${esc(atd.title)}" oninput="aeAutosave()"></div>
+        <div class="ae-field"><label>Data do encontro</label><input type="date" id="ae-atd-date-${idx}" value="${esc(atd.date)}" oninput="aeAutosave()"></div>
+      </div>
+    </div>
+    <div class="ae-card">
+      <div class="ae-card-title">Assuntos abordados <button class="ae-add" style="margin-left:auto" onclick="aeAddSub(${idx})">+ Adicionar</button></div>
+      <div class="ae-tip">Aparecem como itens marcáveis no relatório impresso.</div>
+      <div id="ae-sub-list-${idx}"></div>
+    </div>
+    <div class="ae-card">
+      <div class="ae-card-title">Histórico de encontros <button class="ae-add" style="margin-left:auto" onclick="aeAddMtg(${idx})">+ Reunião</button></div>
+      <table class="ae-dt"><thead><tr><th>Data</th><th>Horário</th><th>Duração</th></tr></thead><tbody id="ae-mtg-list-${idx}"></tbody></table>
+    </div>
+    <div class="ae-card">
+      <div class="ae-card-title">Observações</div>
+      <div class="ae-field"><textarea id="ae-atd-obs-${idx}" rows="4" oninput="aeAutosave()" placeholder="Observações do encontro...">${esc(atd.obs)}</textarea></div>
+    </div>
+    <div class="ae-card">
+      <div class="ae-card-title">Tarefas operacionais <button class="ae-add" style="margin-left:auto" onclick="aeAddTask(${idx})">+ Tarefa</button></div>
+      <table class="ae-dt"><thead><tr><th style="width:30px">#</th><th>Tarefa</th><th style="width:120px">Responsável</th><th style="width:110px">Entrega</th><th style="width:88px">Status</th></tr></thead><tbody id="ae-task-list-${idx}"></tbody></table>
+    </div>
+  `;
+  (atd.subjects || ['']).forEach((s) => aeAddSubDom(idx, s));
+  (atd.meetings || []).forEach((m) => aeAddMtgDom(idx, m));
+  (atd.tasks || []).forEach((t, n) => aeAddTaskDom(idx, t, n + 1));
+}
+
+function aeSwitchAtd(idx) {
+  aeCollectAtdInto(aeCurrentAtd);
+  aeCurrentAtd = idx;
+  aeRenderAtdTabs(aeData.atendimentos);
+  aeRenderAtdPanel(aeData.atendimentos[idx], idx);
+}
+
+function aeAddAtendimento() {
+  aeCollectAtdInto(aeCurrentAtd);
+  aeData.atendimentos.push(aeDefAtd());
+  aeCurrentAtd = aeData.atendimentos.length - 1;
+  aeRenderAtdTabs(aeData.atendimentos);
+  aeRenderAtdPanel(aeData.atendimentos[aeCurrentAtd], aeCurrentAtd);
+  aeAutosave();
+}
+
+function aeRemoveAtd(idx) {
+  if (aeData.atendimentos.length <= 1) { toast('Deve existir ao menos um atendimento.'); return; }
+  if (!confirm('Excluir este atendimento? Os dados serão perdidos.')) return;
+  aeData.atendimentos.splice(idx, 1);
+  aeCurrentAtd = Math.max(0, idx - 1);
+  aeRenderAtdTabs(aeData.atendimentos);
+  aeRenderAtdPanel(aeData.atendimentos[aeCurrentAtd], aeCurrentAtd);
+  aeAutosave();
+}
+
+function aeCollectAtdInto(idx) {
+  const panel = document.getElementById('ae-atd-title-' + idx);
+  if (!panel) return;
+  const title = document.getElementById('ae-atd-title-' + idx)?.value || '';
+  const date = document.getElementById('ae-atd-date-' + idx)?.value || '';
+  const obs = document.getElementById('ae-atd-obs-' + idx)?.value || '';
+  const subjects = [...document.querySelectorAll('#ae-sub-list-' + idx + ' .ae-sub-item input')].map((i) => i.value);
+  const meetings = [...document.querySelectorAll('#ae-mtg-list-' + idx + ' tr')].map((tr) => { const i = tr.querySelectorAll('input'); return { date: i[0]?.value || '', time: i[1]?.value || '', dur: i[2]?.value || '' }; });
+  const tasks = [...document.querySelectorAll('#ae-task-list-' + idx + ' tr')].map((tr) => { const i = tr.querySelectorAll('input'); const s = tr.querySelector('select'); return { label: i[0]?.value || '', resp: i[1]?.value || '', dl: i[2]?.value || '', done: s?.value === 'done' }; });
+  aeData.atendimentos[idx] = { title, date, subjects, meetings, obs, tasks };
+}
+
+function aeAddSub(idx) { aeAddSubDom(idx, ''); aeAutosave(); }
+function aeAddSubDom(idx, v) {
+  const d = document.createElement('div'); d.className = 'ae-sub-item';
+  d.innerHTML = `<input type="text" placeholder="Assunto abordado" value="${esc(v)}" oninput="aeAutosave()"><button class="ae-del" onclick="this.parentElement.remove();aeAutosave()">✕</button>`;
+  document.getElementById('ae-sub-list-' + idx).appendChild(d);
+}
+function aeAddMtg(idx) { aeAddMtgDom(idx, { date: '', time: '', dur: '' }); aeAutosave(); }
+function aeAddMtgDom(idx, m) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" placeholder="dd/mm/aaaa" value="${esc(m.date)}" oninput="aeAutosave()"></td><td><input type="text" placeholder="HH:MM às HH:MM" value="${esc(m.time)}" oninput="aeAutosave()"></td><td><input type="text" placeholder="1h" value="${esc(m.dur)}" oninput="aeAutosave()"></td>`;
+  document.getElementById('ae-mtg-list-' + idx).appendChild(tr);
+}
+function aeAddTask(idx) { aeAddTaskDom(idx, { label: '', resp: '', dl: '', done: false }, document.getElementById('ae-task-list-' + idx).querySelectorAll('tr').length + 1); aeAutosave(); }
+function aeAddTaskDom(idx, t, n) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td class="ae-rnum">${String(n).padStart(2, '0')}</td><td><input type="text" placeholder="Descrição" value="${esc(t.label)}" oninput="aeAutosave()"></td><td><input type="text" placeholder="Responsável" value="${esc(t.resp)}" oninput="aeAutosave()"></td><td><input type="text" placeholder="dd/mm/aaaa" value="${esc(t.dl)}" oninput="aeAutosave()"></td><td><select onchange="aeAutosave()"><option value="pending" ${!t.done ? 'selected' : ''}>Pendente</option><option value="done" ${t.done ? 'selected' : ''}>Feito</option></select></td>`;
+  document.getElementById('ae-task-list-' + idx).appendChild(tr);
+}
+
+// ── PILARES ──────────────────────────────────────────────
+function aeAddPillarDom(p, i) {
+  const d = document.createElement('div'); d.className = 'ae-card';
+  d.innerHTML = `
+    <div class="ae-card-title"><span class="ae-pillar-n">${i + 1}</span>&nbsp;Pilar ${i + 1}</div>
+    <div class="ae-field" style="margin-bottom:.9rem"><label>Nome</label><input class="ae-pn" value="${esc(p.name)}" oninput="aeAutosave()"></div>
+    <div class="ae-field"><label>Descrição</label><textarea class="ae-pd" rows="3" oninput="aeAutosave()">${esc(p.desc)}</textarea></div>
+  `;
+  document.getElementById('ae-pillar-list').appendChild(d);
+}
+
+// ── OKRS ─────────────────────────────────────────────────
+function aeAddOkrDom(o, i) {
+  const d = document.createElement('div'); d.className = 'ae-card';
+  const kh = `<div class="ae-kr-hdr"><span>Key Result</span><span style="text-align:center">%</span></div>`;
+  const ki = (o.krs || []).map((k) => `<div class="ae-okr-item"><input type="text" class="ae-kl" value="${esc(k.l)}" placeholder="Key Result" oninput="aeAutosave()"><input type="number" class="ae-kp" value="${k.p || 0}" min="0" max="100" oninput="aeAutosave()"></div>`).join('');
+  d.innerHTML = `
+    <div class="ae-card-title">OKR ${i + 1}</div>
+    <div class="ae-field" style="margin-bottom:.9rem"><label>Objetivo</label><textarea class="ae-oo" rows="2" oninput="aeAutosave()">${esc(o.obj)}</textarea></div>
+    ${kh}<div class="ae-okr-krs">${ki}</div>
+    <button class="ae-add" style="margin-top:.6rem" onclick="aeAddKR(this)">+ Key Result</button>
+  `;
+  document.getElementById('ae-okr-list').appendChild(d);
+}
+function aeAddKR(btn) {
+  const d = document.createElement('div'); d.className = 'ae-okr-item';
+  d.innerHTML = `<input type="text" class="ae-kl" placeholder="Novo Key Result" oninput="aeAutosave()"><input type="number" class="ae-kp" value="0" min="0" max="100" oninput="aeAutosave()">`;
+  btn.previousElementSibling.appendChild(d);
+  aeAutosave();
+}
+
+// ── COLETA / AUTOSAVE ───────────────────────────────────
+function aeCollect() {
+  aeCollectAtdInto(aeCurrentAtd);
+  return {
+    name: document.getElementById('ae-f-name')?.value || '',
+    year: document.getElementById('ae-f-year')?.value || '',
+    cons: document.getElementById('ae-f-cons')?.value || '',
+    brand: document.getElementById('ae-f-brand')?.value || '',
+    seg: aeData.seg || '',
+    intro: document.getElementById('ae-f-intro')?.value || '',
+    svc: document.getElementById('ae-f-svc')?.value || '',
+    per: document.getElementById('ae-f-per')?.value || '',
+    hrs: document.getElementById('ae-f-hrs')?.value || '',
+    atendimentos: aeData.atendimentos,
+    pillars: [...document.querySelectorAll('#ae-pillar-list .ae-card')].map((c) => ({ name: c.querySelector('.ae-pn')?.value || '', desc: c.querySelector('.ae-pd')?.value || '' })),
+    okrs: [...document.querySelectorAll('.ae-oo')].map((el) => { const c = el.closest('.ae-card'); return { obj: el.value, krs: [...c.querySelectorAll('.ae-okr-item')].map((it) => ({ l: it.querySelector('.ae-kl')?.value || '', p: parseInt(it.querySelector('.ae-kp')?.value) || 0 })).filter((k) => k.l) }; }),
+  };
+}
+
+function aeAutosave() {
+  document.getElementById('ae-side-name').textContent = document.getElementById('ae-f-name')?.value || aeCliente.nome;
+  clearTimeout(aeSaveTimer);
+  aeSaveTimer = setTimeout(aeSaveNow, 900);
+}
+
+async function aeSaveNow() {
+  aeData = aeCollect();
   try {
-    await api('okrs?id=' + id, { method: 'PATCH', body: JSON.stringify({ progresso }) });
-    toast('Progresso atualizado');
-    renderAba(clienteId);
+    await api('assessoria-relatorio', { method: 'POST', body: JSON.stringify({ cliente_id: aeClienteId, dados: aeData }) });
+    const el = document.getElementById('ae-save');
+    el.textContent = 'Salvo automaticamente'; el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 1800);
   } catch (e) { toast(e.message); }
+}
+
+// ── RELATÓRIO ────────────────────────────────────────────
+function aeBc(p) { return p >= 70 ? '#0f8a6e' : p >= 30 ? '#c2820f' : p > 0 ? '#d3455a' : 'var(--line)'; }
+function aeFd(s) { if (!s) return ''; const d = new Date(s + 'T12:00:00'); return isNaN(d) ? s : d.toLocaleDateString('pt-BR'); }
+
+function aeBuildAtdHtml(atd) {
+  const subs = (atd.subjects || []).filter(Boolean).map((s) => `<div class="rsub-item"><div class="rcheck"></div><span>${esc(s)}</span></div>`).join('');
+  const mtgs = (atd.meetings || []).filter((m) => m.date || m.time).map((m) => `<tr><td>${esc(m.date)}</td><td>${esc(m.time)}</td><td>${esc(m.dur)}</td></tr>`).join('');
+  const tasks = (atd.tasks || []).filter((t) => t.label).map((t, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td class="${t.done ? 'tdone' : ''}">${esc(t.label)}</td><td class="${t.done ? 'tdone' : 'tresp'}">${esc(t.resp)}</td><td class="${t.done ? 'tdone' : ''}">${esc(t.dl)}</td></tr>`).join('');
+  return { subs, mtgs, tasks };
+}
+
+function aeGenerateReport() {
+  aeData = aeCollect();
+  aeSaveNow();
+  const d = aeData;
+  const atd = d.atendimentos[aeCurrentAtd] || aeDefAtd();
+  const atdLabel = atd.title || ('Atendimento ' + (aeCurrentAtd + 1));
+  aeBuildAndShowReport(d, atd, atdLabel);
+}
+
+function aePrintReport() {
+  aeGenerateReport();
+  setTimeout(() => window.print(), 350);
+}
+
+function aeBuildAndShowReport(d, atd, atdLabel) {
+  const { subs, mtgs, tasks } = aeBuildAtdHtml(atd);
+  const pillars = (d.pillars || []).map((p, i) => `<div class="rpillar"><div class="rpillar-n">${i + 1}</div><div class="rpillar-c"><div class="rpillar-tag">${esc(p.name)}</div><div class="rpillar-desc">${esc(p.desc)}</div></div></div>`).join('');
+  const okrs = (d.okrs || []).map((o, i) => `<div class="rokrg"><div class="rokr-h">${i + 1} — ${esc(o.obj)}</div>${(o.krs || []).map((k) => { const c = aeBc(k.p); return `<div class="rkr"><div class="rkr-l">${esc(k.l)}</div><div class="rkr-bw"><div class="rkr-b" style="width:${k.p}%;background:${c}"></div></div><div class="rkr-p" style="color:${c}">${k.p}%</div></div>`; }).join('')}</div>`).join('');
+
+  document.getElementById('ae-preview-content').innerHTML = `
+    <div class="rh">
+      <img src="logo-completo.png" alt="D2N" style="height:34px" onerror="this.style.display='none'">
+      <div class="rh-year">${esc(d.year)}</div>
+    </div>
+    <div class="rcov">
+      <div class="rcov-t">Relatório<br>de Assessoria</div>
+      <div class="rcov-rule"></div>
+      <div class="rcov-name">${esc((d.name || '').toUpperCase())}</div>
+      <div class="rcov-cons">CONSULTOR(ES): ${esc((d.cons || '').toUpperCase())}</div>
+    </div>
+    <div class="rs">
+      <div class="rs-hdr"><div class="rs-title">${esc(atdLabel)}</div><div class="rs-badge">Data: ${aeFd(atd.date) || '—'}</div></div>
+      <div class="r2col">
+        <div class="rbox"><h4>Assuntos abordados</h4>${subs || '<p style="font-size:12px;color:var(--ink-faint)">Nenhum assunto registrado.</p>'}</div>
+        <div>
+          <div class="rbox" style="margin-bottom:12px"><table class="rmt"><thead><tr><th>Data</th><th>Horário</th><th>Duração</th></tr></thead><tbody>${mtgs}</tbody></table></div>
+          <div class="rbox"><h4>Observações</h4><p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6">${esc(atd.obs) || '—'}</p></div>
+        </div>
+      </div>
+      <table class="rtasks"><thead><tr><th></th><th>Tarefas operacionais</th><th>Responsável</th><th>Entrega</th></tr></thead><tbody>${tasks}</tbody></table>
+      <div class="rsig"><h4>Assinatura</h4><div class="rsig-line"></div></div>
+    </div>
+    <div class="rs">
+      <div class="rs-title" style="margin-bottom:14px">Planejamento Estratégico ${esc(d.year)}</div>
+      <p class="rintro">${esc(d.intro)}</p>${pillars}
+    </div>
+    <div class="rs">
+      <div class="rs-title" style="margin-bottom:14px">Plano de Ação — Tático</div>
+      <table class="rsvc"><thead><tr><th>Serviço</th><th>Período</th><th>Horas/mês</th></tr></thead><tbody><tr><td>${esc(d.svc) || '—'}</td><td>${esc(d.per) || '—'}</td><td>${esc(d.hrs) || '—'}</td></tr></tbody></table>
+      ${okrs}
+    </div>
+    <div class="rback"><img src="logo-completo.png" alt="D2N" style="height:30px;opacity:.85" onerror="this.style.display='none'"></div>
+  `;
+  document.getElementById('ae-preview').classList.add('open');
 }
 // ============================================================================
 // MÓDULO: DIAGNÓSTICO — conteúdo (perguntas, textos, ações, produtos)
