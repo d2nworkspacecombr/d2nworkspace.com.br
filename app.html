@@ -48,6 +48,32 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .nav-em-breve em{margin-left:auto;font-style:normal;font-size:9px;background:rgba(255,255,255,.06);color:#6b85a8;padding:2px 7px;border-radius:20px;font-weight:600;letter-spacing:.03em}
 .nav-badge{margin-left:auto;font-size:9px;background:var(--teal);color:var(--navy-900);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.03em;display:none}
 
+/* AGENDA — GRADE DE CALENDÁRIO (Semana com horários / Mês em grade) */
+.cal-week{display:flex;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:#fff}
+.cal-hours{width:52px;flex-shrink:0;border-right:1px solid var(--line)}
+.cal-hours-head{height:44px;border-bottom:1px solid var(--line)}
+.cal-hora-label{font-size:10px;color:var(--ink-faint);text-align:right;padding-right:6px;box-sizing:border-box;border-bottom:1px solid var(--line);position:relative;top:-7px}
+.cal-day-col{flex:1;border-right:1px solid var(--line);position:relative;min-width:0}
+.cal-day-col:last-child{border-right:none}
+.cal-day-head{height:44px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Sora',sans-serif;gap:2px}
+.cal-day-head .dn{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+.cal-day-head .dd{font-size:13px;font-weight:700;color:var(--navy-700)}
+.cal-day-head.hoje .dd{background:var(--teal);color:var(--navy-900);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cal-day-body{position:relative}
+.cal-linha-hora{border-bottom:1px solid var(--line);box-sizing:border-box}
+.cal-evento{position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 6px;font-size:11px;color:#fff;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.cal-evento b{display:block;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-evento span{font-size:10px;opacity:.85}
+
+.cal-month{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:#fff}
+.cal-month-head{font-family:'Sora',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);text-align:center;padding:8px 0;border-bottom:1px solid var(--line);background:var(--paper)}
+.cal-month-cel{min-height:96px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;box-sizing:border-box}
+.cal-month-cel.outro-mes{background:var(--paper);opacity:.5}
+.cal-month-cel .num{font-family:'Sora',sans-serif;font-size:11.5px;font-weight:700;color:var(--navy-700);margin-bottom:4px}
+.cal-month-cel.hoje .num{background:var(--teal);color:var(--navy-900);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cal-month-evento{font-size:10px;color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-month-mais{font-size:10px;color:var(--ink-faint);cursor:pointer}
+
 .sidebar-foot{padding:1.1rem 1.2rem 1.3rem;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
 .avatar{width:33px;height:33px;border-radius:50%;background:var(--grad-accent);display:flex;align-items:center;justify-content:center;
   font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;color:#fff;flex-shrink:0;text-transform:uppercase}
@@ -757,16 +783,20 @@ let _agendaRef = new Date();
 
 function agendaIntervaloSemana(data) {
   const d = new Date(data);
-  const diaSemana = (d.getDay() + 6) % 7; // 0 = segunda-feira
+  const diaSemana = d.getDay(); // 0 = domingo
   const inicio = new Date(d); inicio.setDate(d.getDate() - diaSemana); inicio.setHours(0, 0, 0, 0);
   const fim = new Date(inicio); fim.setDate(inicio.getDate() + 6); fim.setHours(23, 59, 59, 999);
   return { inicio, fim };
 }
 
 function agendaIntervaloMes(data) {
-  const d = new Date(data);
-  const inicio = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-  const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+  const primeiroDiaMes = new Date(data.getFullYear(), data.getMonth(), 1);
+  const inicio = new Date(primeiroDiaMes);
+  inicio.setDate(primeiroDiaMes.getDate() - primeiroDiaMes.getDay()); // domingo da primeira semana visível
+  inicio.setHours(0, 0, 0, 0);
+  const fim = new Date(inicio);
+  fim.setDate(inicio.getDate() + 41); // grade de 6 semanas = 42 dias
+  fim.setHours(23, 59, 59, 999);
   return { inicio, fim };
 }
 
@@ -809,38 +839,114 @@ function agendaNavegar(direcao) {
   viewAgendaLista();
 }
 
+let _agendaCache = [];
+
 async function carregarAgenda() {
   const { inicio, fim } = _agendaModo === 'semana' ? agendaIntervaloSemana(_agendaRef) : agendaIntervaloMes(_agendaRef);
   document.getElementById('agenda-periodo-label').textContent = formatarPeriodoAgenda(inicio, fim);
 
   try {
     const { compromissos } = await api('agenda?inicio=' + inicio.toISOString() + '&fim=' + fim.toISOString());
-    renderAgendaLista(compromissos || []);
-    atualizarBadgeAgenda(compromissos || []);
+    _agendaCache = compromissos || [];
+    if (_agendaModo === 'semana') {
+      renderAgendaSemanaGrade(_agendaCache, inicio);
+    } else {
+      renderAgendaMesGrade(_agendaCache, inicio, _agendaRef);
+    }
+    atualizarBadgeAgenda(_agendaCache);
   } catch (e) {
     document.getElementById('agenda-lista').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
   }
 }
 
-function renderAgendaLista(compromissos) {
-  const el = document.getElementById('agenda-lista');
-  if (compromissos.length === 0) {
-    el.innerHTML = `<p class="empty">Nenhum compromisso nesse período.</p>`;
-    return;
-  }
-  const porDia = {};
-  compromissos.forEach((c) => {
-    const dia = new Date(c.data_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' });
-    if (!porDia[dia]) porDia[dia] = [];
-    porDia[dia].push(c);
-  });
+const AGENDA_HORA_INICIO = 6, AGENDA_HORA_FIM = 22, AGENDA_ALTURA_HORA = 48;
 
-  el.innerHTML = Object.entries(porDia).map(([dia, itens]) => `
-    <div style="margin-bottom:1.4rem">
-      <div style="font-family:'Sora',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.6rem">${esc(dia)}</div>
-      ${itens.map((c) => htmlCompromisso(c)).join('')}
+function renderAgendaSemanaGrade(compromissos, inicioSemana) {
+  const el = document.getElementById('agenda-lista');
+  const dias = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(inicioSemana);
+    d.setDate(inicioSemana.getDate() + i);
+    dias.push(d);
+  }
+  const hoje = new Date();
+  const horas = [];
+  for (let h = AGENDA_HORA_INICIO; h < AGENDA_HORA_FIM; h++) horas.push(h);
+  const alturaTotal = horas.length * AGENDA_ALTURA_HORA;
+
+  el.innerHTML = `
+    <div class="cal-week">
+      <div class="cal-hours">
+        <div class="cal-hours-head"></div>
+        ${horas.map((h) => `<div class="cal-hora-label" style="height:${AGENDA_ALTURA_HORA}px">${String(h).padStart(2, '0')}:00</div>`).join('')}
+      </div>
+      ${dias.map((d) => {
+        const ehHoje = d.toDateString() === hoje.toDateString();
+        const eventosDoDia = compromissos.filter((c) => new Date(c.data_inicio).toDateString() === d.toDateString());
+        return `
+          <div class="cal-day-col">
+            <div class="cal-day-head ${ehHoje ? 'hoje' : ''}">
+              <span class="dn">${d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}</span>
+              <span class="dd">${d.getDate()}</span>
+            </div>
+            <div class="cal-day-body" style="height:${alturaTotal}px">
+              ${horas.map(() => `<div class="cal-linha-hora" style="height:${AGENDA_ALTURA_HORA}px"></div>`).join('')}
+              ${eventosDoDia.map((c) => htmlEventoGrade(c)).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
     </div>
-  `).join('');
+  `;
+}
+
+function htmlEventoGrade(c) {
+  const inicioEv = new Date(c.data_inicio);
+  const horaDecimal = inicioEv.getHours() + inicioEv.getMinutes() / 60;
+  const fimEv = c.data_fim ? new Date(c.data_fim) : new Date(inicioEv.getTime() + 60 * 60000);
+  const duracaoHoras = Math.max(0.5, (fimEv - inicioEv) / 3600000);
+  const top = Math.max(0, (horaDecimal - AGENDA_HORA_INICIO) * AGENDA_ALTURA_HORA);
+  const altura = duracaoHoras * AGENDA_ALTURA_HORA;
+  const hora = inicioEv.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `
+    <div class="cal-evento" style="top:${top}px;height:${altura}px;background:${esc(c.cor || '#22d3d3')}" onclick="abrirDetalheCompromisso('${c.id}')">
+      <b>${esc(c.titulo)}</b><span>${hora}</span>
+    </div>
+  `;
+}
+
+function renderAgendaMesGrade(compromissos, inicioGrade, refMes) {
+  const el = document.getElementById('agenda-lista');
+  const mes = refMes.getMonth();
+  const hoje = new Date();
+  const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  const dias = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(inicioGrade);
+    d.setDate(inicioGrade.getDate() + i);
+    dias.push(d);
+  }
+
+  el.innerHTML = `
+    <div class="cal-month">
+      ${nomesDias.map((n) => `<div class="cal-month-head">${n}</div>`).join('')}
+      ${dias.map((d) => {
+        const ehMesAtual = d.getMonth() === mes;
+        const ehHoje = d.toDateString() === hoje.toDateString();
+        const eventosDoDia = compromissos.filter((c) => new Date(c.data_inicio).toDateString() === d.toDateString());
+        const visiveis = eventosDoDia.slice(0, 3);
+        const resto = eventosDoDia.length - visiveis.length;
+        return `
+          <div class="cal-month-cel ${ehMesAtual ? '' : 'outro-mes'} ${ehHoje ? 'hoje' : ''}">
+            <div class="num">${d.getDate()}</div>
+            ${visiveis.map((c) => `<div class="cal-month-evento" style="background:${esc(c.cor || '#22d3d3')}" onclick="abrirDetalheCompromisso('${c.id}')">${esc(c.titulo)}</div>`).join('')}
+            ${resto > 0 ? `<div class="cal-month-mais">+${resto} mais</div>` : ''}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
 }
 
 function htmlCompromisso(c) {
@@ -862,10 +968,47 @@ function htmlCompromisso(c) {
   `;
 }
 
+async function abrirDetalheCompromisso(id) {
+  const c = _agendaCache.find((x) => x.id === id);
+  if (!c) return;
+  const meuConvite = (c.compromisso_convidado || []).find((cv) => cv.usuario_id === usuario.id);
+  const pendente = meuConvite && meuConvite.status === 'pendente';
+  const inicioEv = new Date(c.data_inicio);
+  const dataFormatada = inicioEv.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+  const horaFormatada = inicioEv.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  abrirModal({
+    eyebrow: 'Agenda',
+    titulo: c.titulo,
+    subtitulo: dataFormatada + ' às ' + horaFormatada,
+    corpoHtml: `
+      ${c.descricao ? `<p class="sub" style="margin-bottom:1rem;color:var(--ink-soft)">${esc(c.descricao)}</p>` : ''}
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.5rem">Organizador</div>
+      <p class="sub" style="margin-bottom:1rem">${esc(c.criador?.nome || '—')}</p>
+      ${(c.compromisso_convidado || []).length > 0 ? `
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.5rem">Convidados</div>
+        ${c.compromisso_convidado.map((cv) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">
+            <span style="font-size:13px;color:var(--ink-soft)">${esc(cv.usuarios?.nome || '—')}</span>
+            <span class="pill" style="${cv.status === 'pendente' ? 'opacity:.55' : ''}">${esc(cv.status)}</span>
+          </div>
+        `).join('')}
+      ` : ''}
+      ${pendente ? `
+        <div style="display:flex;gap:10px;margin-top:1.25rem">
+          <button class="btn btn-outline" style="flex:1" onclick="responderConvite('${c.id}','recusado')">Recusar</button>
+          <button class="btn btn-grad" style="flex:1" onclick="responderConvite('${c.id}','aceito')">Aceitar</button>
+        </div>
+      ` : ''}
+    `,
+  });
+}
+
 async function responderConvite(compromissoId, status) {
   try {
     await api('agenda?id=' + compromissoId + '&acao=responder', { method: 'PATCH', body: JSON.stringify({ status }) });
     toast(status === 'aceito' ? 'Compromisso aceito' : 'Compromisso recusado');
+    fecharModal();
     rotear();
   } catch (e) { toast(e.message); }
 }
