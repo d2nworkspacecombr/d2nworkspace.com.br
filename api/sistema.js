@@ -19,6 +19,10 @@ const ROTAS = {
   "briefing": () => require("../lib/briefing"),
   "briefing-arquivos": () => require("../lib/briefing-arquivos"),
   "agenda": () => require("../lib/agenda"),
+  "tarefas": () => require("../lib/tarefas"),
+  "projetos": () => require("../lib/projetos"),
+  "categorias": () => require("../lib/categorias"),
+  "etiquetas": () => require("../lib/etiquetas"),
 };
 
 module.exports = async (req, res) => {
