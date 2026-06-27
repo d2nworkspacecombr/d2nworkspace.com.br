@@ -1158,6 +1158,7 @@ let _tfCategorias = [];
 let _tfEtiquetas = [];
 let _tfTarefas = [];
 let _tfTarefaSelecionada = null;
+let _tfSeletorResponsaveis = null;
 let _tfExpandido = {};
 
 const TF_VISOES = [
@@ -1394,11 +1395,13 @@ async function tfSelecionar(id) {
       </select>
     </div>
     <div class="field">
-      <label>Responsável</label>
-      <select onchange="tfSalvarCampo('responsavel_id', this.value || null)">
-        <option value="">— Sem responsável —</option>
-        ${colaboradores.map((c) => `<option value="${c.id}" ${t.responsavel_id === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}
-      </select>
+      <label>Responsáveis</label>
+      <div class="multi-select" id="tf-multi-responsaveis">
+        <div class="chips"></div>
+        <input type="text" placeholder="Buscar colaborador...">
+        <div class="multi-dropdown"></div>
+      </div>
+      <button type="button" style="background:none;border:none;color:var(--teal-deep);font-size:11.5px;cursor:pointer;margin-top:6px;padding:0" onclick="tfSalvarResponsaveis()">Salvar responsáveis</button>
     </div>
     <div class="field">
       <label>Etiquetas</label>
@@ -1415,6 +1418,25 @@ async function tfSelecionar(id) {
     <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="tfAbrirMoverPara('${t.id}')">Mover para...</button>
     <button class="btn btn-outline" style="width:100%;margin-top:.5rem;color:#d3455a;border-color:#d3455a" onclick="tfExcluir('${t.id}')">Excluir tarefa</button>
   `;
+
+  const idsAtuais = (t.tarefa_responsavel || []).map((tr) => tr.usuario_id);
+  _tfSeletorResponsaveis = montarMultiSelect({
+    containerId: 'tf-multi-responsaveis',
+    opcoes: colaboradores.map((c) => ({ id: c.id, label: c.nome })),
+    selecionadosIniciais: idsAtuais,
+  });
+}
+
+async function tfSalvarResponsaveis() {
+  if (!_tfTarefaSelecionada || !_tfSeletorResponsaveis) return;
+  try {
+    await api('tarefas?id=' + _tfTarefaSelecionada, {
+      method: 'PATCH',
+      body: JSON.stringify({ responsavel_ids: _tfSeletorResponsaveis.getSelecionados() }),
+    });
+    toast('Responsáveis atualizados');
+    tfCarregarArvore();
+  } catch (e) { toast(e.message); }
 }
 
 async function tfSalvarCampo(campo, valor) {
@@ -2149,9 +2171,19 @@ async function viewClienteDetalhe(clienteId) {
   }
 
   document.getElementById('main').innerHTML = `
-    <div class="eyebrow">Cliente</div>
-    <h1>${esc(cliente.nome)}</h1>
-    <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div class="eyebrow">Cliente</div>
+        <h1>${esc(cliente.nome)}</h1>
+        <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+      </div>
+      ${usuario.role === 'admin' ? `
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button class="btn btn-outline" onclick="toggleStatusCliente('${clienteId}', '${cliente.status === 'ativo' ? 'inativo' : 'ativo'}')">${cliente.status === 'ativo' ? 'Inativar' : 'Ativar'}</button>
+          <button class="btn btn-outline" style="color:#d3455a;border-color:#d3455a" onclick="excluirCliente('${clienteId}')">Excluir</button>
+        </div>
+      ` : ''}
+    </div>
 
     ${usuario.role === 'admin' ? `
     <div class="card">
@@ -2189,6 +2221,25 @@ function renderVinculos(vinculos) {
       <button style="background:none;border:none;color:#e53e3e;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer" onclick="removerVinculo('${v.id}')">Remover</button>
     </div>
   `).join('');
+}
+
+async function toggleStatusCliente(clienteId, novoStatus) {
+  const acao = novoStatus === 'ativo' ? 'ativar' : 'inativar';
+  if (!confirm(`Tem certeza que quer ${acao} este cliente?`)) return;
+  try {
+    await api('clientes?id=' + clienteId, { method: 'PATCH', body: JSON.stringify({ status: novoStatus }) });
+    toast(novoStatus === 'ativo' ? 'Cliente ativado' : 'Cliente inativado');
+    viewClienteDetalhe(clienteId);
+  } catch (e) { toast(e.message); }
+}
+
+async function excluirCliente(clienteId) {
+  if (!confirm('Excluir este cliente permanentemente? Essa ação não pode ser desfeita e remove também os dados ligados a ele.')) return;
+  try {
+    await api('clientes?id=' + clienteId, { method: 'DELETE' });
+    toast('Cliente excluído');
+    location.hash = '#/clientes';
+  } catch (e) { toast(e.message); }
 }
 
 async function vincularColaborador(clienteId) {
@@ -2244,7 +2295,7 @@ function renderTabelaColaboradores(colaboradores) {
   }
   el.innerHTML = `
     <table>
-      <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Perfil</th><th>Status</th></tr></thead>
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Função</th><th>Perfil</th><th>Status</th>${usuario.role === 'admin' ? '<th></th>' : ''}</tr></thead>
       <tbody>
         ${colaboradores.map((c) => `
           <tr>
@@ -2253,11 +2304,26 @@ function renderTabelaColaboradores(colaboradores) {
             <td>${esc(c.cargo) || '—'}</td>
             <td>${c.role === 'admin' ? 'Administrador' : 'Colaborador'}</td>
             <td><span class="pill">${c.ativo ? 'ativo' : 'inativo'}</span></td>
+            ${usuario.role === 'admin' ? `
+              <td>
+                ${c.id !== usuario.id ? `<button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="toggleAtivoColaborador('${c.id}', ${!c.ativo})">${c.ativo ? 'Inativar' : 'Ativar'}</button>` : ''}
+              </td>
+            ` : ''}
           </tr>
         `).join('')}
       </tbody>
     </table>
   `;
+}
+
+async function toggleAtivoColaborador(id, ativo) {
+  const acao = ativo ? 'ativar' : 'inativar';
+  if (!confirm(`Tem certeza que quer ${acao} esse colaborador?`)) return;
+  try {
+    await api('colaboradores?id=' + id, { method: 'PATCH', body: JSON.stringify({ ativo }) });
+    toast(ativo ? 'Colaborador ativado' : 'Colaborador inativado');
+    viewColaboradoresLista();
+  } catch (e) { toast(e.message); }
 }
 
 async function toggleFormColaborador() {
@@ -3027,6 +3093,15 @@ async function viewDiagnosticoLista() {
   }
 }
 
+async function excluirDiagnostico(id) {
+  if (!confirm('Excluir este diagnóstico? Essa ação não pode ser desfeita.')) return;
+  try {
+    await api('diagnosticos?id=' + id, { method: 'DELETE' });
+    toast('Diagnóstico excluído');
+    viewDiagnosticoLista();
+  } catch (e) { toast(e.message); }
+}
+
 function renderGradeDiagnostico(lista) {
   const el = document.getElementById('grade-diagnostico');
   if (!lista || lista.length === 0) {
@@ -3048,6 +3123,7 @@ function renderGradeDiagnostico(lista) {
                 <div class="nome-cliente">${esc(nome)}</div>
                 <div class="segmento-cliente">${esc(d.clientes?.segmento || d.segmento_prospect) || '—'}</div>
               </div>
+              ${usuario.role === 'admin' ? `<button class="ae-del" style="margin-left:auto" title="Excluir" onclick="event.stopPropagation();excluirDiagnostico('${d.id}')">✕</button>` : ''}
             </div>
             <div class="rodape-card">
               <span class="pill">${concluido ? 'Concluído' : 'Em andamento'}</span>
