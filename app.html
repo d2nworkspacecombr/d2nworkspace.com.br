@@ -74,6 +74,52 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .cal-month-evento{font-size:10px;color:#fff;border-radius:4px;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .cal-month-mais{font-size:10px;color:var(--ink-faint);cursor:pointer}
 
+/* TAREFAS — layout em 3 colunas (nav / árvore / painel) */
+.tf-shell{display:flex;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:#fff;min-height:560px}
+.tf-nav{width:208px;flex-shrink:0;background:var(--paper);border-right:1px solid var(--line);padding:1rem;overflow-y:auto}
+.tf-amb-toggle{display:flex;background:#fff;border:1px solid var(--line);border-radius:9px;padding:3px;margin-bottom:1.1rem}
+.tf-amb-btn{flex:1;border:none;background:none;padding:7px 0;font-family:'Sora',sans-serif;font-size:11px;font-weight:600;color:var(--ink-faint);border-radius:7px;cursor:pointer}
+.tf-amb-btn.active{background:var(--navy-700);color:#fff}
+.tf-nav-secao{margin-bottom:1.3rem}
+.tf-nav-titulo{display:flex;justify-content:space-between;align-items:center;font-family:'Sora',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.5rem}
+.tf-add{background:none;border:none;color:var(--teal-deep);font-size:15px;font-weight:700;cursor:pointer;line-height:1;padding:0 4px}
+.tf-nav-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;padding:7px 8px;border-radius:7px;font-size:13px;color:var(--ink-soft);cursor:pointer;font-family:'Barlow',sans-serif}
+.tf-nav-item:hover{background:#fff}
+.tf-nav-item.active{background:var(--navy-700);color:#fff;font-weight:600}
+.tf-proj-item{display:flex;flex-direction:column;gap:3px;padding:7px 8px;border-radius:7px;cursor:pointer;margin-bottom:2px}
+.tf-proj-item:hover{background:#fff}
+.tf-proj-item.active{background:#fff;box-shadow:inset 0 0 0 1.5px var(--teal)}
+.tf-proj-nome{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink)}
+.tf-proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tf-proj-barra{height:4px;border-radius:3px;background:var(--line);overflow:hidden;margin-left:15px}
+.tf-proj-barra div{height:100%;background:var(--teal)}
+.tf-proj-pct{font-size:10px;color:var(--ink-faint);margin-left:15px}
+
+.tf-lista{flex:1;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line)}
+.tf-lista-head{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--line)}
+.tf-lista-head h2{font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin:0}
+.tf-arvore{flex:1;overflow-y:auto;padding:.6rem}
+
+.tf-item{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.tf-item:hover{background:var(--paper)}
+.tf-item.selecionada{background:#eaf7f7}
+.tf-check{width:17px;height:17px;border-radius:50%;border:1.8px solid var(--ink-faint);flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#fff;font-size:10px;color:#fff;font-weight:700}
+.tf-check.feita{background:var(--teal);border-color:var(--teal)}
+.tf-item-corpo{flex:1;min-width:0}
+.tf-item-titulo{font-size:13.5px;color:var(--ink);line-height:1.4}
+.tf-item-titulo.feita{color:var(--ink-faint);text-decoration:line-through}
+.tf-item-meta{display:flex;gap:9px;align-items:center;margin-top:3px;flex-wrap:wrap}
+.tf-prio{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tf-prazo{font-size:11px;color:var(--ink-faint)}
+.tf-prazo.atrasada{color:#d3455a;font-weight:600}
+.tf-toggle-sub{background:none;border:none;color:var(--ink-faint);cursor:pointer;padding:2px;flex-shrink:0;margin-top:1px;width:14px;font-size:11px}
+.tf-filhos{margin-left:25px;border-left:1px solid var(--line);padding-left:5px}
+
+.tf-painel{width:336px;flex-shrink:0;padding:1.25rem;overflow-y:auto}
+.tf-painel-vazio{color:var(--ink-faint);font-size:13px;text-align:center;margin-top:3rem}
+.tf-titulo-input{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;border:none;border-bottom:1.5px solid transparent;padding:4px 0;background:transparent;width:100%;color:var(--ink)}
+.tf-titulo-input:focus{border-bottom-color:var(--navy-600);outline:none}
+
 .sidebar-foot{padding:1.1rem 1.2rem 1.3rem;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
 .avatar{width:33px;height:33px;border-radius:50%;background:var(--grad-accent);display:flex;align-items:center;justify-content:center;
   font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;color:#fff;flex-shrink:0;text-transform:uppercase}
@@ -654,6 +700,7 @@ const NAV_GRUPOS = [
     itens: [
       { hash: '#/', label: 'Início', icone: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>' },
       { hash: '#/agenda', label: 'Agenda', icone: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
+      { hash: '#/tarefas', label: 'Tarefas', icone: '<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>' },
     ],
   },
   {
@@ -732,6 +779,7 @@ function rotear() {
   if (partes[0] === 'diagnostico' && partes[1]) return viewDiagnosticoDetalhe(partes[1]);
   if (partes[0] === 'diagnostico') return viewDiagnosticoLista();
   if (partes[0] === 'agenda') return viewAgendaLista();
+  if (partes[0] === 'tarefas') return viewTarefasLista();
   return viewInicio();
 }
 
@@ -1095,6 +1143,472 @@ async function abrirFormCompromisso() {
       fecharModal();
       rotear();
     } catch (err) { toast(err.message); btn.disabled = false; }
+  });
+}
+
+// ============================================================================
+// VIEW: TAREFAS — layout em 3 colunas (nav / árvore / painel da tarefa)
+// ============================================================================
+let _tfAmbiente = 'privado';
+let _tfVisao = 'inbox';
+let _tfProjetoId = null;
+let _tfCategoriaSelecionada = null;
+let _tfProjetos = [];
+let _tfCategorias = [];
+let _tfEtiquetas = [];
+let _tfTarefas = [];
+let _tfTarefaSelecionada = null;
+let _tfExpandido = {};
+
+const TF_VISOES = [
+  { id: 'inbox', label: 'Inbox' },
+  { id: 'hoje', label: 'Hoje' },
+  { id: 'semana', label: 'Próximos 7 dias' },
+  { id: 'atrasadas', label: 'Atrasadas' },
+  { id: 'concluidas', label: 'Concluídas' },
+];
+const TF_CORES_PRIORIDADE = { baixa: '#8aa0bd', media: '#22d3d3', alta: '#c2820f', urgente: '#d3455a' };
+
+async function viewTarefasLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Geral</div>
+    <h1>Tarefas</h1>
+    <div class="tf-shell" style="margin-top:1.25rem">
+      <nav class="tf-nav" id="tf-nav"></nav>
+      <div class="tf-lista">
+        <div class="tf-lista-head">
+          <h2 id="tf-titulo-visao">Inbox</h2>
+          <button class="btn btn-grad" onclick="tfNovaTarefa()">+ Nova tarefa</button>
+        </div>
+        <div class="tf-arvore" id="tf-arvore">${htmlCarregando()}</div>
+      </div>
+      <div class="tf-painel" id="tf-painel"><p class="tf-painel-vazio">Selecione uma tarefa para ver os detalhes.</p></div>
+    </div>
+  `;
+
+  try {
+    const [{ projetos }, { categorias }, { etiquetas }] = await Promise.all([
+      api('projetos'), api('categorias'), api('etiquetas'),
+    ]);
+    _tfProjetos = projetos || [];
+    _tfCategorias = categorias || [];
+    _tfEtiquetas = etiquetas || [];
+  } catch (e) { toast(e.message); }
+
+  renderTfNav();
+  tfTrocarVisao('inbox');
+}
+
+function renderTfNav() {
+  document.getElementById('tf-nav').innerHTML = `
+    <div class="tf-amb-toggle">
+      <button class="tf-amb-btn ${_tfAmbiente === 'privado' ? 'active' : ''}" onclick="tfTrocarAmbiente('privado')">Minhas Tarefas</button>
+      <button class="tf-amb-btn ${_tfAmbiente === 'empresa' ? 'active' : ''}" onclick="tfTrocarAmbiente('empresa')">Empresa</button>
+    </div>
+    <div class="tf-nav-secao">
+      <div class="tf-nav-titulo">Visualizações</div>
+      ${TF_VISOES.map((v) => `
+        <button class="tf-nav-item ${(_tfVisao === v.id && !_tfProjetoId) ? 'active' : ''}" onclick="tfTrocarVisao('${v.id}')">${v.label}</button>
+      `).join('')}
+    </div>
+    <div class="tf-nav-secao">
+      <div class="tf-nav-titulo">Projetos <button class="tf-add" onclick="tfNovoProjeto()" title="Novo projeto">+</button></div>
+      ${_tfProjetos.length === 0 ? `<p class="sub" style="font-size:12px">Nenhum projeto ainda.</p>` : _tfProjetos.map((p) => `
+        <div class="tf-proj-item ${_tfProjetoId === p.id ? 'active' : ''}" onclick="tfAbrirProjeto('${p.id}')">
+          <div class="tf-proj-nome"><span class="tf-proj-dot" style="background:${esc(p.cor)}"></span>${esc(p.nome)}</div>
+          <div class="tf-proj-barra"><div style="width:${p.progresso}%"></div></div>
+          <div class="tf-proj-pct">${p.progresso}% · ${p.tarefas_concluidas}/${p.total_tarefas}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="tf-nav-secao">
+      <div class="tf-nav-titulo">Categorias <button class="tf-add" onclick="tfNovaCategoria()" title="Nova categoria">+</button></div>
+      ${_tfCategorias.length === 0 ? `<p class="sub" style="font-size:12px">Nenhuma categoria ainda.</p>` : _tfCategorias.map((c) => `
+        <button class="tf-nav-item ${_tfCategoriaSelecionada === c.id ? 'active' : ''}" onclick="tfFiltrarCategoria('${c.id}')">${esc(c.nome)}</button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function tfTrocarAmbiente(amb) {
+  _tfAmbiente = amb;
+  _tfProjetoId = null;
+  tfTrocarVisao(_tfVisao);
+}
+
+function tfTrocarVisao(visao) {
+  _tfVisao = visao;
+  _tfProjetoId = null;
+  renderTfNav();
+  const v = TF_VISOES.find((x) => x.id === visao);
+  document.getElementById('tf-titulo-visao').textContent = v ? v.label : visao;
+  tfCarregarArvore();
+}
+
+function tfAbrirProjeto(id) {
+  _tfProjetoId = id;
+  renderTfNav();
+  const p = _tfProjetos.find((x) => x.id === id);
+  document.getElementById('tf-titulo-visao').textContent = p ? p.nome : 'Projeto';
+  tfCarregarArvore();
+}
+
+function tfFiltrarCategoria(id) {
+  _tfCategoriaSelecionada = _tfCategoriaSelecionada === id ? null : id;
+  renderTfNav();
+  tfCarregarArvore();
+}
+
+async function tfCarregarArvore() {
+  const el = document.getElementById('tf-arvore');
+  el.innerHTML = htmlCarregando();
+
+  let url = 'tarefas?';
+  url += _tfProjetoId ? 'projeto_id=' + _tfProjetoId : 'ambiente=' + _tfAmbiente + '&visao=' + _tfVisao;
+  if (_tfCategoriaSelecionada) url += '&categoria_id=' + _tfCategoriaSelecionada;
+
+  try {
+    const { tarefas } = await api(url);
+    _tfTarefas = tarefas || [];
+    renderTfArvore();
+  } catch (e) {
+    el.innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function tfFilhos(id) {
+  return _tfTarefas.filter((t) => t.tarefa_pai_id === id);
+}
+
+function renderTfArvore() {
+  const el = document.getElementById('tf-arvore');
+  if (_tfTarefas.length === 0) {
+    el.innerHTML = `<p class="empty" style="margin-top:2rem">Nenhuma tarefa aqui.</p>`;
+    return;
+  }
+  const itens = _tfProjetoId ? _tfTarefas.filter((t) => !t.tarefa_pai_id) : _tfTarefas;
+  el.innerHTML = itens.map((t) => htmlTfItem(t, !!_tfProjetoId)).join('');
+}
+
+function htmlTfItem(t, permiteFilhos) {
+  const filhos = permiteFilhos ? tfFilhos(t.id) : [];
+  const temFilhos = filhos.length > 0;
+  const feita = t.status === 'concluida';
+  const expandido = _tfExpandido[t.id];
+  const hoje = new Date().toISOString().slice(0, 10);
+  const atrasada = t.prazo && t.prazo < hoje && !feita;
+  const corPrio = TF_CORES_PRIORIDADE[t.prioridade] || '#22d3d3';
+
+  return `
+    <div>
+      <div class="tf-item ${_tfTarefaSelecionada === t.id ? 'selecionada' : ''}" onclick="tfSelecionar('${t.id}')">
+        ${temFilhos ? `<button class="tf-toggle-sub" onclick="event.stopPropagation();tfToggleExpandir('${t.id}')">${expandido ? '▾' : '▸'}</button>` : '<span style="width:14px;display:inline-block"></span>'}
+        <span class="tf-check ${feita ? 'feita' : ''}" onclick="event.stopPropagation();tfConcluir('${t.id}', ${!feita})">${feita ? '✓' : ''}</span>
+        <div class="tf-item-corpo">
+          <div class="tf-item-titulo ${feita ? 'feita' : ''}">${esc(t.titulo)}</div>
+          <div class="tf-item-meta">
+            <span class="tf-prio" style="background:${corPrio}" title="Prioridade ${esc(t.prioridade)}"></span>
+            ${t.prazo ? `<span class="tf-prazo ${atrasada ? 'atrasada' : ''}">${formatarDataBR(t.prazo)}</span>` : ''}
+            ${t.projeto ? `<span class="tf-prazo">${esc(t.projeto.nome)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      ${temFilhos && expandido ? `<div class="tf-filhos">${filhos.map((f) => htmlTfItem(f, true)).join('')}</div>` : ''}
+    </div>
+  `;
+}
+
+function formatarDataBR(iso) {
+  const [, m, d] = iso.split('-');
+  return `${d}/${m}`;
+}
+
+function tfToggleExpandir(id) {
+  _tfExpandido[id] = !_tfExpandido[id];
+  renderTfArvore();
+}
+
+async function tfAtualizarProgressoProjetos() {
+  try {
+    const { projetos } = await api('projetos');
+    _tfProjetos = projetos || [];
+    renderTfNav();
+  } catch (e) { /* silencioso */ }
+}
+
+async function tfConcluir(id, concluir) {
+  try {
+    await api('tarefas?id=' + id, { method: 'PATCH', body: JSON.stringify({ status: concluir ? 'concluida' : 'pendente' }) });
+    tfCarregarArvore();
+    tfAtualizarProgressoProjetos();
+  } catch (e) { toast(e.message); }
+}
+
+async function tfSelecionar(id) {
+  _tfTarefaSelecionada = id;
+  renderTfArvore();
+  const t = _tfTarefas.find((x) => x.id === id);
+  if (!t) return;
+
+  let colaboradores = [];
+  try { ({ colaboradores } = await api('colaboradores')); } catch (e) { /* segue sem a lista */ }
+
+  const etiquetasSelecionadas = (t.tarefa_etiqueta || []).map((te) => te.etiqueta_id);
+
+  document.getElementById('tf-painel').innerHTML = `
+    <input class="tf-titulo-input" value="${esc(t.titulo)}" onchange="tfSalvarCampo('titulo', this.value)">
+    <div class="field" style="margin-top:.8rem">
+      <label>Descrição</label>
+      <textarea rows="4" onchange="tfSalvarCampo('descricao', this.value)">${esc(t.descricao || '')}</textarea>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Prioridade</label>
+        <select onchange="tfSalvarCampo('prioridade', this.value)">
+          ${['baixa', 'media', 'alta', 'urgente'].map((p) => `<option value="${p}" ${t.prioridade === p ? 'selected' : ''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Prazo</label>
+        <input type="date" value="${t.prazo || ''}" onchange="tfSalvarCampo('prazo', this.value)">
+      </div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select onchange="tfSalvarCampo('status', this.value)">
+        ${[['pendente', 'Pendente'], ['em_andamento', 'Em andamento'], ['concluida', 'Concluída']].map(([v, l]) => `<option value="${v}" ${t.status === v ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Projeto</label>
+      <select onchange="tfSalvarCampo('projeto_id', this.value || null)">
+        <option value="">— Sem projeto —</option>
+        ${_tfProjetos.map((p) => `<option value="${p.id}" ${t.projeto_id === p.id ? 'selected' : ''}>${esc(p.nome)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Categoria</label>
+      <select onchange="tfSalvarCampo('categoria_id', this.value || null)">
+        <option value="">— Sem categoria —</option>
+        ${_tfCategorias.map((c) => `<option value="${c.id}" ${t.categoria_id === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Responsável</label>
+      <select onchange="tfSalvarCampo('responsavel_id', this.value || null)">
+        <option value="">— Sem responsável —</option>
+        ${colaboradores.map((c) => `<option value="${c.id}" ${t.responsavel_id === c.id ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Etiquetas</label>
+      <div class="checks" id="tf-p-etiquetas">
+        ${_tfEtiquetas.map((e) => `
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px">
+            <input type="checkbox" value="${e.id}" ${etiquetasSelecionadas.includes(e.id) ? 'checked' : ''} onchange="tfSalvarEtiquetas()">${esc(e.nome)}
+          </label>
+        `).join('')}
+      </div>
+      <button type="button" style="background:none;border:none;color:var(--teal-deep);font-size:11.5px;cursor:pointer;margin-top:6px;padding:0" onclick="tfNovaEtiquetaInline()">+ nova etiqueta</button>
+    </div>
+    ${t.nivel < 3 ? `<button class="btn btn-outline" style="width:100%;margin-top:.8rem" onclick="tfNovaSubtarefa('${t.id}')">+ Adicionar subtarefa</button>` : ''}
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem" onclick="tfAbrirMoverPara('${t.id}')">Mover para...</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:.5rem;color:#d3455a;border-color:#d3455a" onclick="tfExcluir('${t.id}')">Excluir tarefa</button>
+  `;
+}
+
+async function tfSalvarCampo(campo, valor) {
+  if (!_tfTarefaSelecionada) return;
+  try {
+    await api('tarefas?id=' + _tfTarefaSelecionada, { method: 'PATCH', body: JSON.stringify({ [campo]: valor }) });
+    toast('Salvo');
+    tfCarregarArvore();
+    if (campo === 'status' || campo === 'projeto_id') tfAtualizarProgressoProjetos();
+  } catch (e) { toast(e.message); }
+}
+
+async function tfSalvarEtiquetas() {
+  const marcados = [...document.querySelectorAll('#tf-p-etiquetas input:checked')].map((i) => i.value);
+  try {
+    await api('tarefas?id=' + _tfTarefaSelecionada, { method: 'PATCH', body: JSON.stringify({ etiqueta_ids: marcados }) });
+    tfCarregarArvore();
+  } catch (e) { toast(e.message); }
+}
+
+async function tfNovaEtiquetaInline() {
+  const nome = prompt('Nome da nova etiqueta:');
+  if (!nome) return;
+  try {
+    await api('etiquetas', { method: 'POST', body: JSON.stringify({ nome }) });
+    const { etiquetas } = await api('etiquetas');
+    _tfEtiquetas = etiquetas || [];
+    tfSelecionar(_tfTarefaSelecionada);
+  } catch (e) { toast(e.message); }
+}
+
+function tfNovaTarefa() {
+  abrirModal({
+    eyebrow: 'Tarefas',
+    titulo: 'Nova tarefa',
+    corpoHtml: `
+      <form id="form-tarefa">
+        <div class="field"><label>Título</label><input name="titulo" required></div>
+        <div class="field"><label>Descrição</label><textarea name="descricao" rows="3"></textarea></div>
+        <div class="grid2">
+          <div class="field"><label>Prioridade</label>
+            <select name="prioridade">
+              <option value="baixa">Baixa</option>
+              <option value="media" selected>Média</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+          <div class="field"><label>Prazo</label><input type="date" name="prazo"></div>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar tarefa</button>
+      </form>
+    `,
+  });
+
+  document.getElementById('form-tarefa').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    try {
+      await api('tarefas', {
+        method: 'POST',
+        body: JSON.stringify({
+          titulo: f.titulo.value,
+          descricao: f.descricao.value,
+          prioridade: f.prioridade.value,
+          prazo: f.prazo.value || null,
+          ambiente: _tfAmbiente,
+          projeto_id: _tfProjetoId || null,
+          categoria_id: _tfCategoriaSelecionada || null,
+        }),
+      });
+      toast('Tarefa criada');
+      fecharModal();
+      tfCarregarArvore();
+      tfAtualizarProgressoProjetos();
+    } catch (err) { toast(err.message); }
+  });
+}
+
+function tfNovaSubtarefa(paiId) {
+  abrirModal({
+    eyebrow: 'Tarefas',
+    titulo: 'Nova subtarefa',
+    corpoHtml: `
+      <form id="form-subtarefa">
+        <div class="field"><label>Título</label><input name="titulo" required></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar subtarefa</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-subtarefa').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('tarefas', { method: 'POST', body: JSON.stringify({ titulo: e.target.titulo.value, tarefa_pai_id: paiId }) });
+      toast('Subtarefa criada');
+      fecharModal();
+      _tfExpandido[paiId] = true;
+      tfCarregarArvore();
+    } catch (err) { toast(err.message); }
+  });
+}
+
+function tfAbrirMoverPara(tarefaId) {
+  const candidatas = _tfTarefas.filter((t) => t.id !== tarefaId && t.nivel < 3);
+  abrirModal({
+    eyebrow: 'Tarefas',
+    titulo: 'Mover tarefa',
+    corpoHtml: `
+      <div class="field">
+        <label>Nova tarefa-mãe</label>
+        <select id="tf-select-mover">
+          <option value="">— Tornar tarefa principal (sem mãe) —</option>
+          ${candidatas.map((t) => `<option value="${t.id}">${esc(t.titulo)}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn btn-navy" style="width:100%;margin-top:.6rem" onclick="tfConfirmarMover('${tarefaId}')">Mover</button>
+    `,
+  });
+}
+
+async function tfConfirmarMover(tarefaId) {
+  const novoPaiId = document.getElementById('tf-select-mover').value || null;
+  try {
+    await api('tarefas?id=' + tarefaId, { method: 'PATCH', body: JSON.stringify({ tarefa_pai_id: novoPaiId }) });
+    toast('Tarefa movida');
+    fecharModal();
+    tfCarregarArvore();
+  } catch (e) { toast(e.message); }
+}
+
+async function tfExcluir(id) {
+  if (!confirm('Excluir essa tarefa e todas as subtarefas? Essa ação não pode ser desfeita.')) return;
+  try {
+    await api('tarefas?id=' + id, { method: 'DELETE' });
+    toast('Tarefa excluída');
+    _tfTarefaSelecionada = null;
+    document.getElementById('tf-painel').innerHTML = `<p class="tf-painel-vazio">Selecione uma tarefa para ver os detalhes.</p>`;
+    tfCarregarArvore();
+    tfAtualizarProgressoProjetos();
+  } catch (e) { toast(e.message); }
+}
+
+function tfNovoProjeto() {
+  abrirModal({
+    eyebrow: 'Tarefas',
+    titulo: 'Novo projeto',
+    corpoHtml: `
+      <form id="form-projeto">
+        <div class="field"><label>Nome</label><input name="nome" required></div>
+        <div class="field"><label>Cor</label>
+          <select name="cor">
+            <option value="#22d3d3">Teal</option>
+            <option value="#1d3f74">Navy</option>
+            <option value="#d3455a">Vermelho</option>
+            <option value="#c2820f">Âmbar</option>
+            <option value="#0f8a6e">Verde</option>
+          </select>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar projeto</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-projeto').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('projetos', { method: 'POST', body: JSON.stringify({ nome: e.target.nome.value, cor: e.target.cor.value }) });
+      toast('Projeto criado');
+      fecharModal();
+      tfAtualizarProgressoProjetos();
+    } catch (err) { toast(err.message); }
+  });
+}
+
+function tfNovaCategoria() {
+  abrirModal({
+    eyebrow: 'Tarefas',
+    titulo: 'Nova categoria',
+    corpoHtml: `
+      <form id="form-categoria">
+        <div class="field"><label>Nome</label><input name="nome" required></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar categoria</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-categoria').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('categorias', { method: 'POST', body: JSON.stringify({ nome: e.target.nome.value }) });
+      toast('Categoria criada');
+      fecharModal();
+      const { categorias } = await api('categorias');
+      _tfCategorias = categorias || [];
+      renderTfNav();
+    } catch (err) { toast(err.message); }
   });
 }
 
