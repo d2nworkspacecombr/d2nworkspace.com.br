@@ -361,6 +361,11 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .ae-kr-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .ae-kr-row input[type=text]{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--ink);outline:none}
 .ae-kr-row input[type=text]:focus{border-color:var(--teal)}
+.ae-cron-row{display:flex;gap:8px;align-items:center;margin-bottom:7px}
+.ae-cron-row input{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px;color:var(--ink);outline:none}
+.ae-cron-row input:focus{border-color:var(--teal)}
+.ae-cron-titulo{flex:1}
+.ae-cron-data,.ae-cron-hora{width:140px;flex-shrink:0}
 #ae-preview{display:none;position:fixed;inset:0;background:rgba(10,22,40,.85);z-index:1000;overflow-y:auto;padding:24px;justify-content:center}
 #ae-preview.open{display:flex}
 .ae-preview-close{position:fixed;top:18px;right:18px;background:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:15px;font-weight:700;cursor:pointer;z-index:1001;box-shadow:var(--shadow-md)}
@@ -1106,8 +1111,21 @@ async function abrirDetalheCompromisso(id) {
           <button class="btn btn-grad" style="flex:1" onclick="responderConvite('${c.id}','aceito')">Aceitar</button>
         </div>
       ` : ''}
+      ${(c.criado_por === usuario.id || usuario.role === 'admin') ? `
+        <button class="btn btn-outline" style="width:100%;margin-top:.8rem;color:#d3455a;border-color:#d3455a" onclick="excluirCompromisso('${c.id}')">Excluir compromisso</button>
+      ` : ''}
     `,
   });
+}
+
+async function excluirCompromisso(id) {
+  if (!confirm('Excluir este compromisso? Os convidados também deixarão de vê-lo.')) return;
+  try {
+    await api('agenda?id=' + id, { method: 'DELETE' });
+    toast('Compromisso excluído');
+    fecharModal();
+    rotear();
+  } catch (e) { toast(e.message); }
 }
 
 async function responderConvite(compromissoId, status) {
@@ -2589,7 +2607,7 @@ let aeCandidatosAssessor = [];
 let aeSaveTimer = null;
 
 function aeDefAtd() {
-  return { title: '', date: '', subjects: [''], meetings: [{ date: '', time: '', dur: '' }], obs: '', tasks: [{ label: '', resp: '', dl: '', done: false }] };
+  return { title: '', date: '', time: '', subjects: [''], obs: '', tasks: [{ id: gerarId(), label: '', tipo: 'assessor', responsavel_ids: [], interlocutor_nome: '', dl: '', done: false }] };
 }
 
 function aeDef(cliente) {
@@ -2599,6 +2617,7 @@ function aeDef(cliente) {
     intro: 'Este quadro estratégico reúne as metas prioritárias que irão nortear toda a assessoria, servindo como base para as decisões estratégicas, táticas e operacionais do negócio. Cada meta foi definida para atuar diretamente na sustentabilidade, crescimento e profissionalização da gestão.',
     pillars: PILARES_FIXOS.map((p) => ({ id: p.id, desc: '' })),
     atendimentos: [aeDefAtd()],
+    cronograma: [],
     svc: '', per: '12 meses', hrs: '',
     okrs: [
       { id: gerarId(), obj: 'Garantir previsibilidade financeira mensal para sustentar decisões estratégicas, promover estabilidade e viabilizar o crescimento saudável da empresa.', krs: [{ id: gerarId(), l: '', done: false }] },
@@ -2640,12 +2659,20 @@ function aeMigrarDados(d) {
 
   (d.atendimentos || []).forEach((atd) => {
     if (!atd.id) atd.id = gerarId();
+    if (atd.time === undefined) atd.time = '';
     (atd.tasks || []).forEach((t) => {
       if (!t.id) t.id = gerarId();
       if (!t.tipo) t.tipo = 'assessor';
       if (!Array.isArray(t.responsavel_ids)) t.responsavel_ids = [];
       if (t.interlocutor_nome === undefined) t.interlocutor_nome = '';
     });
+  });
+
+  if (!Array.isArray(d.cronograma)) d.cronograma = [];
+  (d.atendimentos || []).forEach((atd) => {
+    if (atd.date && atd.time && !d.cronograma.some((c) => c.atdId === atd.id)) {
+      d.cronograma.push({ id: gerarId(), atdId: atd.id, titulo: atd.title || 'Atendimento', data: atd.date, hora: atd.time });
+    }
   });
 
   return d;
@@ -2718,6 +2745,11 @@ async function viewAssessoriaDetalhe(clienteId) {
           <div class="eyebrow">Plano de Assessoria</div>
           <h1>Histórico de Atendimentos</h1>
           <p class="sub" style="margin-bottom:1rem">Cada atendimento gera um relatório próprio</p>
+          <div class="ae-card">
+            <div class="ae-card-title">Cronograma de encontros <button class="ae-add" style="margin-left:auto" onclick="aeAddCronogramaManual()">+ Adicionar</button></div>
+            <div class="ae-tip">Preenchido automaticamente na primeira vez que um atendimento tem data e horário definidos. Pode editar ou excluir livremente depois.</div>
+            <div id="ae-cronograma-list"></div>
+          </div>
           <div class="ae-atd-header">
             <div class="ae-atd-tabs" id="ae-atd-tabs"></div>
             <button class="ae-add" onclick="aeAddAtendimento()">+ Atendimento</button>
@@ -2778,6 +2810,7 @@ function aeLoadIntoDom() {
   aeSet('ae-f-intro', d.intro);
   aeSet('ae-f-svc', d.svc); aeSet('ae-f-per', d.per); aeSet('ae-f-hrs', d.hrs);
   aeLoadAtds(d.atendimentos);
+  renderCronograma();
   const pl = document.getElementById('ae-pillar-list'); pl.innerHTML = '';
   (d.pillars || []).forEach((p, i) => aeAddPillarDom(p, i));
   const ol = document.getElementById('ae-okr-list'); ol.innerHTML = '';
@@ -2804,19 +2837,16 @@ function aeRenderAtdPanel(atd, idx) {
   document.getElementById('ae-atd-content').innerHTML = `
     <div class="ae-card">
       <div class="ae-card-title">Identificação do atendimento</div>
-      <div class="ae-row c2">
+      <div class="ae-row c3">
         <div class="ae-field"><label>Título do atendimento</label><input id="ae-atd-title-${idx}" placeholder="Ex: Reunião de alinhamento mensal" value="${esc(atd.title)}" oninput="aeAutosave()"></div>
         <div class="ae-field"><label>Data do encontro</label><input type="date" id="ae-atd-date-${idx}" value="${esc(atd.date)}" oninput="aeAutosave()"></div>
+        <div class="ae-field"><label>Horário</label><input type="time" id="ae-atd-time-${idx}" value="${esc(atd.time)}" oninput="aeAutosave()"></div>
       </div>
     </div>
     <div class="ae-card">
       <div class="ae-card-title">Assuntos abordados <button class="ae-add" style="margin-left:auto" onclick="aeAddSub(${idx})">+ Adicionar</button></div>
       <div class="ae-tip">Aparecem como itens marcáveis no relatório impresso.</div>
       <div id="ae-sub-list-${idx}"></div>
-    </div>
-    <div class="ae-card">
-      <div class="ae-card-title">Histórico de encontros <button class="ae-add" style="margin-left:auto" onclick="aeAddMtg(${idx})">+ Reunião</button></div>
-      <table class="ae-dt"><thead><tr><th>Data</th><th>Horário</th><th>Duração</th></tr></thead><tbody id="ae-mtg-list-${idx}"></tbody></table>
     </div>
     <div class="ae-card">
       <div class="ae-card-title">Observações</div>
@@ -2828,7 +2858,6 @@ function aeRenderAtdPanel(atd, idx) {
     </div>
   `;
   (atd.subjects || ['']).forEach((s) => aeAddSubDom(idx, s));
-  (atd.meetings || []).forEach((m) => aeAddMtgDom(idx, m));
   (atd.tasks || []).forEach((t) => aeAddTaskDom(idx, t));
 }
 
@@ -2863,9 +2892,9 @@ function aeCollectAtdInto(idx) {
   if (!panel) return;
   const title = document.getElementById('ae-atd-title-' + idx)?.value || '';
   const date = document.getElementById('ae-atd-date-' + idx)?.value || '';
+  const time = document.getElementById('ae-atd-time-' + idx)?.value || '';
   const obs = document.getElementById('ae-atd-obs-' + idx)?.value || '';
   const subjects = [...document.querySelectorAll('#ae-sub-list-' + idx + ' .ae-sub-item input')].map((i) => i.value);
-  const meetings = [...document.querySelectorAll('#ae-mtg-list-' + idx + ' tr')].map((tr) => { const i = tr.querySelectorAll('input'); return { date: i[0]?.value || '', time: i[1]?.value || '', dur: i[2]?.value || '' }; });
   const tasks = [...document.querySelectorAll('#ae-task-list-' + idx + ' .ae-task-card')].map((card) => {
     const tipo = card.dataset.tipo === 'interlocutor' ? 'interlocutor' : 'assessor';
     return {
@@ -2878,7 +2907,8 @@ function aeCollectAtdInto(idx) {
       done: card.querySelector('.ae-task-check')?.classList.contains('feita') || false,
     };
   });
-  aeData.atendimentos[idx] = { title, date, subjects, meetings, obs, tasks };
+  aeData.atendimentos[idx] = { title, date, time, subjects, obs, tasks };
+  aeAutoCronograma(aeData.atendimentos[idx]);
 }
 
 function aeAddSub(idx) { aeAddSubDom(idx, ''); aeAutosave(); }
@@ -2886,12 +2916,6 @@ function aeAddSubDom(idx, v) {
   const d = document.createElement('div'); d.className = 'ae-sub-item';
   d.innerHTML = `<input type="text" placeholder="Assunto abordado" value="${esc(v)}" oninput="aeAutosave()"><button class="ae-del" onclick="this.parentElement.remove();aeAutosave()">✕</button>`;
   document.getElementById('ae-sub-list-' + idx).appendChild(d);
-}
-function aeAddMtg(idx) { aeAddMtgDom(idx, { date: '', time: '', dur: '' }); aeAutosave(); }
-function aeAddMtgDom(idx, m) {
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td><input type="text" placeholder="dd/mm/aaaa" value="${esc(m.date)}" oninput="aeAutosave()"></td><td><input type="text" placeholder="HH:MM às HH:MM" value="${esc(m.time)}" oninput="aeAutosave()"></td><td><input type="text" placeholder="1h" value="${esc(m.dur)}" oninput="aeAutosave()"></td>`;
-  document.getElementById('ae-mtg-list-' + idx).appendChild(tr);
 }
 function aeHtmlTask(t) {
   const respArea = t.tipo === 'interlocutor'
@@ -2944,6 +2968,58 @@ function aeToggleTipoResp(btn, tipo) {
   } else {
     area.innerHTML = `<div class="ae-field" style="margin-bottom:0"><input type="text" class="ae-task-interlocutor" placeholder="Nome do interlocutor" value="${esc(aeCliente?.interlocutor || '')}" oninput="aeAutosave()"></div>`;
   }
+  aeAutosave();
+}
+
+// ── CRONOGRAMA DE ENCONTROS ──────────────────────────────
+function aeAutoCronograma(atd) {
+  if (!atd.date || !atd.time) return;
+  if (!Array.isArray(aeData.cronograma)) aeData.cronograma = [];
+  if (aeData.cronograma.some((c) => c.atdId === atd.id)) return;
+  aeData.cronograma.push({ id: gerarId(), atdId: atd.id, titulo: atd.title || 'Atendimento', data: atd.date, hora: atd.time });
+  aeData.cronograma.sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
+  renderCronograma();
+}
+
+function renderCronograma() {
+  const el = document.getElementById('ae-cronograma-list');
+  if (!el) return;
+  const lista = aeData.cronograma || [];
+  if (lista.length === 0) {
+    el.innerHTML = `<p class="sub" style="font-size:12.5px">Nenhum encontro registrado ainda.</p>`;
+    return;
+  }
+  el.innerHTML = lista.map((c) => `
+    <div class="ae-cron-row" data-cron-id="${esc(c.id)}">
+      <input type="text" class="ae-cron-titulo" placeholder="Título do encontro" value="${esc(c.titulo)}" oninput="aeSalvarCronograma()">
+      <input type="date" class="ae-cron-data" value="${esc(c.data)}" oninput="aeSalvarCronograma()">
+      <input type="time" class="ae-cron-hora" value="${esc(c.hora)}" oninput="aeSalvarCronograma()">
+      <button class="ae-del" onclick="aeRemoverCronograma('${esc(c.id)}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function aeAddCronogramaManual() {
+  if (!Array.isArray(aeData.cronograma)) aeData.cronograma = [];
+  aeData.cronograma.push({ id: gerarId(), atdId: null, titulo: '', data: '', hora: '' });
+  renderCronograma();
+  aeAutosave();
+}
+
+function aeRemoverCronograma(id) {
+  aeData.cronograma = (aeData.cronograma || []).filter((c) => c.id !== id);
+  renderCronograma();
+  aeAutosave();
+}
+
+function aeSalvarCronograma() {
+  aeData.cronograma = [...document.querySelectorAll('#ae-cronograma-list .ae-cron-row')].map((row) => ({
+    id: row.dataset.cronId,
+    atdId: (aeData.cronograma || []).find((c) => c.id === row.dataset.cronId)?.atdId || null,
+    titulo: row.querySelector('.ae-cron-titulo')?.value || '',
+    data: row.querySelector('.ae-cron-data')?.value || '',
+    hora: row.querySelector('.ae-cron-hora')?.value || '',
+  }));
   aeAutosave();
 }
 
@@ -3052,6 +3128,7 @@ function aeCollect() {
     per: document.getElementById('ae-f-per')?.value || '',
     hrs: document.getElementById('ae-f-hrs')?.value || '',
     atendimentos: aeData.atendimentos,
+    cronograma: aeData.cronograma || [],
     pillars: [...document.querySelectorAll('#ae-pillar-list .ae-card')].map((c) => ({ id: c.dataset.pillarId, desc: c.querySelector('.ae-pd')?.value || '' })),
     okrs: [...document.querySelectorAll('#ae-okr-list .ae-card')].map((c) => ({
       id: c.dataset.okrId,
@@ -3093,9 +3170,8 @@ function aeNomeResp(t) {
 
 function aeBuildAtdHtml(atd) {
   const subs = (atd.subjects || []).filter(Boolean).map((s) => `<div class="rsub-item"><div class="rcheck"></div><span>${esc(s)}</span></div>`).join('');
-  const mtgs = (atd.meetings || []).filter((m) => m.date || m.time).map((m) => `<tr><td>${esc(m.date)}</td><td>${esc(m.time)}</td><td>${esc(m.dur)}</td></tr>`).join('');
   const tasks = (atd.tasks || []).filter((t) => t.label).map((t, i) => `<tr><td>${String(i + 1).padStart(2, '0')}</td><td class="${t.done ? 'tdone' : ''}">${esc(t.label)}</td><td class="${t.done ? 'tdone' : 'tresp'}">${esc(aeNomeResp(t))}</td><td class="${t.done ? 'tdone' : ''}">${esc(aeFd(t.dl))}</td></tr>`).join('');
-  return { subs, mtgs, tasks };
+  return { subs, tasks };
 }
 
 function aeGenerateReport() {
@@ -3113,7 +3189,7 @@ function aePrintReport() {
 }
 
 function aeBuildAndShowReport(d, atd, atdLabel) {
-  const { subs, mtgs, tasks } = aeBuildAtdHtml(atd);
+  const { subs, tasks } = aeBuildAtdHtml(atd);
   const pillars = (d.pillars || []).map((p, i) => `<div class="rpillar"><div class="rpillar-n">${i + 1}</div><div class="rpillar-c"><div class="rpillar-tag">${esc(p.name)}</div><div class="rpillar-desc">${esc(p.desc)}</div></div></div>`).join('');
   const okrs = (d.okrs || []).map((o, i) => `<div class="rokrg"><div class="rokr-h">${i + 1} — ${esc(o.obj)}</div>${(o.krs || []).map((k) => { const c = aeBc(k.p); return `<div class="rkr"><div class="rkr-l">${esc(k.l)}</div><div class="rkr-bw"><div class="rkr-b" style="width:${k.p}%;background:${c}"></div></div><div class="rkr-p" style="color:${c}">${k.p}%</div></div>`; }).join('')}</div>`).join('');
 
@@ -3129,13 +3205,10 @@ function aeBuildAndShowReport(d, atd, atdLabel) {
       <div class="rcov-cons">CONSULTOR(ES): ${esc((d.cons || '').toUpperCase())}</div>
     </div>
     <div class="rs">
-      <div class="rs-hdr"><div class="rs-title">${esc(atdLabel)}</div><div class="rs-badge">Data: ${aeFd(atd.date) || '—'}</div></div>
+      <div class="rs-hdr"><div class="rs-title">${esc(atdLabel)}</div><div class="rs-badge">Data: ${aeFd(atd.date) || '—'}${atd.time ? ' às ' + esc(atd.time) : ''}</div></div>
       <div class="r2col">
         <div class="rbox"><h4>Assuntos abordados</h4>${subs || '<p style="font-size:12px;color:var(--ink-faint)">Nenhum assunto registrado.</p>'}</div>
-        <div>
-          <div class="rbox" style="margin-bottom:12px"><table class="rmt"><thead><tr><th>Data</th><th>Horário</th><th>Duração</th></tr></thead><tbody>${mtgs}</tbody></table></div>
-          <div class="rbox"><h4>Observações</h4><p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6">${esc(atd.obs) || '—'}</p></div>
-        </div>
+        <div class="rbox"><h4>Observações</h4><p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6">${esc(atd.obs) || '—'}</p></div>
       </div>
       <table class="rtasks"><thead><tr><th></th><th>Tarefas operacionais</th><th>Responsável</th><th>Entrega</th></tr></thead><tbody>${tasks}</tbody></table>
       <div class="rsig"><h4>Assinatura</h4><div class="rsig-line"></div></div>
