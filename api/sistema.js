@@ -18,6 +18,7 @@ const ROTAS = {
   "upload-logo": () => require("../lib/upload-logo"),
   "briefing": () => require("../lib/briefing"),
   "briefing-arquivos": () => require("../lib/briefing-arquivos"),
+  "agenda": () => require("../lib/agenda"),
 };
 
 module.exports = async (req, res) => {
