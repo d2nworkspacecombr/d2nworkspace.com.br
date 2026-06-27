@@ -297,11 +297,13 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .rkr-p{font-family:monospace;font-size:11.5px;font-weight:700;width:30px;text-align:right;flex-shrink:0}
 .rback{background:var(--navy-900);min-height:120px;display:flex;align-items:center;justify-content:center;padding:26px}
 @media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
   body *{visibility:hidden}
   #ae-preview, #ae-preview *{visibility:visible}
   #ae-preview{position:absolute;inset:0;background:#fff;padding:0}
   .ae-preview-close{display:none}
-  .ae-preview-inner{width:100%}
+  .ae-preview-inner{width:100%;box-shadow:none;border-radius:0}
+  @page{margin:0}
 }
 @media(max-width:980px){
   .ae-shell{flex-direction:column}
@@ -587,7 +589,7 @@ function htmlGradeClientes(clientes, hrefBase) {
             </div>
           </div>
           <div class="rodape-card">
-            <span class="pill">${esc(c.status)}</span>
+            <span class="pill">${esc(rotuloStatusCliente(c.status))}</span>
           </div>
         </div>
       `).join('')}
@@ -756,7 +758,7 @@ function renderTabelaClientes(clientes) {
             <td><a class="link" href="#/clientes/${c.id}">${esc(c.nome)}</a></td>
             <td>${esc(c.segmento) || '—'}</td>
             <td>${(c.produtos || []).map((p) => esc(p.nome)).join(', ') || '—'}</td>
-            <td><span class="pill">${esc(c.status)}</span></td>
+            <td><span class="pill">${esc(rotuloStatusCliente(c.status))}</span></td>
           </tr>
         `).join('')}
       </tbody>
@@ -921,7 +923,19 @@ async function viewClienteDetalhe(clienteId) {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">Cliente</div>
     <h1>${esc(cliente.nome)}</h1>
-    <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+    <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')} · <span class="pill">${esc(rotuloStatusCliente(cliente.status))}</span></p>
+
+    ${usuario.role === 'admin' ? `
+    <div class="card" style="margin-bottom:1rem">
+      <h3 style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:4px">Status do cliente</h3>
+      <p class="sub" style="margin-bottom:1rem">Cliente inativo ou pausado continua com o histórico preservado, só fica fora das listas de trabalho ativo.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ${cliente.status === 'ativo' ? 'btn-navy' : 'btn-outline'}" onclick="alterarStatusCliente('${clienteId}','ativo')">Ativo</button>
+        <button class="btn ${cliente.status === 'pausado' ? 'btn-navy' : 'btn-outline'}" onclick="alterarStatusCliente('${clienteId}','pausado')">Pausado</button>
+        <button class="btn ${cliente.status === 'encerrado' ? 'btn-navy' : 'btn-outline'}" onclick="alterarStatusCliente('${clienteId}','encerrado')">Inativo</button>
+      </div>
+    </div>
+    ` : ''}
 
     ${usuario.role === 'admin' ? `
     <div class="card">
@@ -942,9 +956,38 @@ async function viewClienteDetalhe(clienteId) {
       </div>
     </div>
     ` : ''}
+
+    ${usuario.role === 'admin' ? `
+    <div class="card" style="margin-top:1rem;border-color:#f4c6cc">
+      <h3 style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:#d3455a;margin-bottom:4px">Zona de risco</h3>
+      <p class="sub" style="margin-bottom:1rem">Excluir remove o cliente e todo o histórico (diagnósticos, assessoria) de forma permanente. Não pode ser desfeito. Prefira "Inativo" se só quiser arquivar.</p>
+      <button class="btn" style="background:#fde8ea;color:#d3455a" onclick="excluirCliente('${clienteId}','${esc(cliente.nome)}')">Excluir cliente permanentemente</button>
+    </div>
+    ` : ''}
   `;
 
   if (usuario.role === 'admin') renderVinculos(vinculos);
+}
+
+function rotuloStatusCliente(status) {
+  return { ativo: 'Ativo', pausado: 'Pausado', encerrado: 'Inativo' }[status] || status;
+}
+
+async function alterarStatusCliente(clienteId, novoStatus) {
+  try {
+    await api('clientes?id=' + clienteId, { method: 'PATCH', body: JSON.stringify({ status: novoStatus }) });
+    toast('Status atualizado para ' + rotuloStatusCliente(novoStatus));
+    viewClienteDetalhe(clienteId);
+  } catch (e) { toast(e.message); }
+}
+
+async function excluirCliente(clienteId, nome) {
+  if (!confirm(`Excluir "${nome}" permanentemente?\n\nIsso remove todo o histórico (diagnósticos, assessoria, vínculos) e não pode ser desfeito.`)) return;
+  try {
+    await api('clientes?id=' + clienteId, { method: 'DELETE' });
+    toast('Cliente excluído');
+    location.hash = '#/clientes';
+  } catch (e) { toast(e.message); }
 }
 
 function renderVinculos(vinculos) {
