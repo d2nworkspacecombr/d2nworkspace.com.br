@@ -46,6 +46,7 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .nav-em-breve{display:flex;align-items:center;gap:11px;padding:9px 14px;font-family:'Sora',sans-serif;font-size:13px;font-weight:500;color:#445873;cursor:default}
 .nav-em-breve svg{width:16.5px;height:16.5px;flex-shrink:0;opacity:.5}
 .nav-em-breve em{margin-left:auto;font-style:normal;font-size:9px;background:rgba(255,255,255,.06);color:#6b85a8;padding:2px 7px;border-radius:20px;font-weight:600;letter-spacing:.03em}
+.nav-badge{margin-left:auto;font-size:9px;background:var(--teal);color:var(--navy-900);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.03em;display:none}
 
 .sidebar-foot{padding:1.1rem 1.2rem 1.3rem;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
 .avatar{width:33px;height:33px;border-radius:50%;background:var(--grad-accent);display:flex;align-items:center;justify-content:center;
@@ -626,6 +627,7 @@ const NAV_GRUPOS = [
     titulo: 'Geral',
     itens: [
       { hash: '#/', label: 'Início', icone: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/>' },
+      { hash: '#/agenda', label: 'Agenda', icone: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
     ],
   },
   {
@@ -703,6 +705,7 @@ function rotear() {
   if (partes[0] === 'briefing') return viewBriefingLista();
   if (partes[0] === 'diagnostico' && partes[1]) return viewDiagnosticoDetalhe(partes[1]);
   if (partes[0] === 'diagnostico') return viewDiagnosticoLista();
+  if (partes[0] === 'agenda') return viewAgendaLista();
   return viewInicio();
 }
 
@@ -721,10 +724,235 @@ function viewInicio() {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">D2N Workspace</div>
     <h1>Olá, ${esc((usuario.nome || '').split(' ')[0])}</h1>
-    <p class="sub" style="margin-top:.75rem;max-width:480px;font-size:14px;color:var(--ink-soft)">
+    <p class="sub" style="margin-top:.5rem;max-width:480px;font-size:14px;color:var(--ink-soft)">
       Use o menu à esquerda para acessar os clientes e os módulos de negócio.
     </p>
+    <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin:1.75rem 0 .9rem">Seus compromissos da semana</h2>
+    <div id="inicio-agenda">${htmlCarregando()}</div>
   `;
+  carregarAgendaInicio();
+}
+
+async function carregarAgendaInicio() {
+  const el = document.getElementById('inicio-agenda');
+  try {
+    const { inicio, fim } = agendaIntervaloSemana(new Date());
+    const { compromissos } = await api('agenda?inicio=' + inicio.toISOString() + '&fim=' + fim.toISOString());
+    atualizarBadgeAgenda(compromissos || []);
+    if (!compromissos || compromissos.length === 0) {
+      el.innerHTML = `<p class="empty">Nenhum compromisso essa semana.</p>`;
+      return;
+    }
+    el.innerHTML = compromissos.map((c) => htmlCompromisso(c)).join('');
+  } catch (e) {
+    el.innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+// ============================================================================
+// VIEW: AGENDA — lista com alternância Semana/Mês, convites e tags coloridas
+// ============================================================================
+let _agendaModo = 'semana';
+let _agendaRef = new Date();
+
+function agendaIntervaloSemana(data) {
+  const d = new Date(data);
+  const diaSemana = (d.getDay() + 6) % 7; // 0 = segunda-feira
+  const inicio = new Date(d); inicio.setDate(d.getDate() - diaSemana); inicio.setHours(0, 0, 0, 0);
+  const fim = new Date(inicio); fim.setDate(inicio.getDate() + 6); fim.setHours(23, 59, 59, 999);
+  return { inicio, fim };
+}
+
+function agendaIntervaloMes(data) {
+  const d = new Date(data);
+  const inicio = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
+  const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { inicio, fim };
+}
+
+function formatarPeriodoAgenda(inicio, fim) {
+  const opts = { day: '2-digit', month: 'short' };
+  return inicio.toLocaleDateString('pt-BR', opts) + ' — ' + fim.toLocaleDateString('pt-BR', opts);
+}
+
+async function viewAgendaLista() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Geral</div>
+    <h1>Agenda</h1>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:1.25rem 0 1rem;gap:1rem;flex-wrap:wrap">
+      <div class="tabs" style="margin-bottom:0;border-bottom:none">
+        <button class="tab ${_agendaModo === 'semana' ? 'active' : ''}" onclick="agendaTrocarModo('semana')">Semana</button>
+        <button class="tab ${_agendaModo === 'mes' ? 'active' : ''}" onclick="agendaTrocarModo('mes')">Mês</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-outline" onclick="agendaNavegar(-1)">←</button>
+        <span id="agenda-periodo-label" style="font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--navy-700);min-width:120px;text-align:center"></span>
+        <button class="btn btn-outline" onclick="agendaNavegar(1)">→</button>
+        <button class="btn btn-grad" onclick="abrirFormCompromisso()">Novo compromisso</button>
+      </div>
+    </div>
+    <div id="agenda-lista">${htmlCarregando()}</div>
+  `;
+  await carregarAgenda();
+}
+
+function agendaTrocarModo(modo) {
+  _agendaModo = modo;
+  viewAgendaLista();
+}
+
+function agendaNavegar(direcao) {
+  const ref = new Date(_agendaRef);
+  if (_agendaModo === 'semana') ref.setDate(ref.getDate() + direcao * 7);
+  else ref.setMonth(ref.getMonth() + direcao);
+  _agendaRef = ref;
+  viewAgendaLista();
+}
+
+async function carregarAgenda() {
+  const { inicio, fim } = _agendaModo === 'semana' ? agendaIntervaloSemana(_agendaRef) : agendaIntervaloMes(_agendaRef);
+  document.getElementById('agenda-periodo-label').textContent = formatarPeriodoAgenda(inicio, fim);
+
+  try {
+    const { compromissos } = await api('agenda?inicio=' + inicio.toISOString() + '&fim=' + fim.toISOString());
+    renderAgendaLista(compromissos || []);
+    atualizarBadgeAgenda(compromissos || []);
+  } catch (e) {
+    document.getElementById('agenda-lista').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function renderAgendaLista(compromissos) {
+  const el = document.getElementById('agenda-lista');
+  if (compromissos.length === 0) {
+    el.innerHTML = `<p class="empty">Nenhum compromisso nesse período.</p>`;
+    return;
+  }
+  const porDia = {};
+  compromissos.forEach((c) => {
+    const dia = new Date(c.data_inicio).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' });
+    if (!porDia[dia]) porDia[dia] = [];
+    porDia[dia].push(c);
+  });
+
+  el.innerHTML = Object.entries(porDia).map(([dia, itens]) => `
+    <div style="margin-bottom:1.4rem">
+      <div style="font-family:'Sora',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:.6rem">${esc(dia)}</div>
+      ${itens.map((c) => htmlCompromisso(c)).join('')}
+    </div>
+  `).join('');
+}
+
+function htmlCompromisso(c) {
+  const meuConvite = (c.compromisso_convidado || []).find((cv) => cv.usuario_id === usuario.id);
+  const pendente = meuConvite && meuConvite.status === 'pendente';
+  const hora = new Date(c.data_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return `
+    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;${pendente ? 'border-left:3px solid #c2820f' : ''}">
+      <div style="width:10px;height:10px;border-radius:50%;background:${esc(c.cor || '#22d3d3')};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;color:var(--navy-700)">${esc(c.titulo)}</div>
+        <div style="font-size:12px;color:var(--ink-faint)">${hora}${c.criador ? ' · ' + esc(c.criador.nome) : ''}</div>
+      </div>
+      ${pendente ? `
+        <button class="btn btn-outline" style="padding:6px 12px;font-size:11.5px" onclick="responderConvite('${c.id}','recusado')">Recusar</button>
+        <button class="btn btn-grad" style="padding:6px 12px;font-size:11.5px" onclick="responderConvite('${c.id}','aceito')">Aceitar</button>
+      ` : meuConvite ? `<span class="pill">${meuConvite.status === 'aceito' ? 'Aceito' : 'Recusado'}</span>` : ''}
+    </div>
+  `;
+}
+
+async function responderConvite(compromissoId, status) {
+  try {
+    await api('agenda?id=' + compromissoId + '&acao=responder', { method: 'PATCH', body: JSON.stringify({ status }) });
+    toast(status === 'aceito' ? 'Compromisso aceito' : 'Compromisso recusado');
+    rotear();
+  } catch (e) { toast(e.message); }
+}
+
+function atualizarBadgeAgenda(compromissos) {
+  const pendentes = (compromissos || []).filter((c) =>
+    (c.compromisso_convidado || []).some((cv) => cv.usuario_id === usuario.id && cv.status === 'pendente')
+  ).length;
+
+  const link = document.querySelector('.nav a[href="#/agenda"]');
+  if (!link) return;
+  let badge = link.querySelector('.nav-badge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'nav-badge';
+    link.appendChild(badge);
+  }
+  if (pendentes > 0) {
+    badge.textContent = pendentes;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+async function abrirFormCompromisso() {
+  let colaboradores = [];
+  try { ({ colaboradores } = await api('colaboradores')); } catch (e) { /* segue sem a lista se falhar */ }
+
+  abrirModal({
+    eyebrow: 'Agenda',
+    titulo: 'Novo compromisso',
+    corpoHtml: `
+      <form id="form-compromisso">
+        <div class="field"><label>Título</label><input name="titulo" required></div>
+        <div class="grid2">
+          <div class="field"><label>Data e horário</label><input type="datetime-local" name="data_inicio" required></div>
+          <div class="field"><label>Cor / tag</label>
+            <select name="cor">
+              <option value="#22d3d3">Teal</option>
+              <option value="#1d3f74">Navy</option>
+              <option value="#d3455a">Vermelho</option>
+              <option value="#c2820f">Âmbar</option>
+              <option value="#0f8a6e">Verde</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Descrição (opcional)</label><textarea name="descricao" rows="3"></textarea></div>
+        <div class="field">
+          <label>Convidar colaboradores</label>
+          <div class="multi-select" id="multi-convidados">
+            <div class="chips"></div>
+            <input type="text" placeholder="Buscar colaborador...">
+            <div class="multi-dropdown"></div>
+          </div>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar compromisso</button>
+      </form>
+    `,
+  });
+
+  const seletor = montarMultiSelect({
+    containerId: 'multi-convidados',
+    opcoes: colaboradores.filter((c) => c.id !== usuario.id).map((c) => ({ id: c.id, label: c.nome })),
+  });
+
+  document.getElementById('form-compromisso').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      await api('agenda', {
+        method: 'POST',
+        body: JSON.stringify({
+          titulo: form.titulo.value,
+          descricao: form.descricao.value,
+          data_inicio: new Date(form.data_inicio.value).toISOString(),
+          cor: form.cor.value,
+          convidados: seletor.getSelecionados(),
+        }),
+      });
+      toast('Compromisso criado');
+      fecharModal();
+      rotear();
+    } catch (err) { toast(err.message); btn.disabled = false; }
+  });
 }
 
 function viewEmConstrucao(titulo) {
