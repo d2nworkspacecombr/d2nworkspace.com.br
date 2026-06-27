@@ -468,6 +468,10 @@ function htmlCarregando(msg) {
   `;
 }
 
+// Cache simples em memória: mostra o que já foi carregado antes na hora,
+// enquanto busca por trás uma versão atualizada. Some quando a página recarrega.
+const _cacheListas = {};
+
 // ============================================================================
 // MODAL — abre um card elegante centralizado, com cabeçalho padronizado
 // ============================================================================
@@ -759,15 +763,26 @@ async function viewBriefingLista() {
     <div id="grade-briefing" style="margin-top:1.1rem">${htmlCarregando()}</div>
   `;
 
+  if (_cacheListas.briefing) {
+    _briefingClientesCache = _cacheListas.briefing;
+    renderGradeBriefing(_briefingClientesCache);
+    ligarBusca('busca-briefing', (termo) => {
+      renderGradeBriefing(_briefingClientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
+    });
+  }
+
   try {
     const { clientes } = await api('briefing');
     _briefingClientesCache = clientes || [];
+    _cacheListas.briefing = _briefingClientesCache;
     renderGradeBriefing(_briefingClientesCache);
     ligarBusca('busca-briefing', (termo) => {
       renderGradeBriefing(_briefingClientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
     });
   } catch (e) {
-    document.getElementById('grade-briefing').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    if (!_cacheListas.briefing) {
+      document.getElementById('grade-briefing').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    }
   }
 }
 
@@ -804,18 +819,18 @@ function renderGradeBriefing(clientes) {
 async function viewBriefingDetalhe(clienteId) {
   document.getElementById('main').innerHTML = `${htmlCarregando()}`;
 
-  let cliente;
-  try {
-    ({ cliente } = await api('clientes?id=' + clienteId));
-  } catch (e) {
-    document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  const [clienteResultado, briefingResultado] = await Promise.allSettled([
+    api('clientes?id=' + clienteId),
+    api('briefing?cliente_id=' + clienteId),
+  ]);
+
+  if (clienteResultado.status === 'rejected') {
+    document.getElementById('main').innerHTML = `<p class="empty">${esc(clienteResultado.reason.message)}</p>`;
     return;
   }
 
-  let briefing = null;
-  try {
-    ({ briefing } = await api('briefing?cliente_id=' + clienteId));
-  } catch (e) { /* segue com formulário vazio se ainda não existir */ }
+  const cliente = clienteResultado.value.cliente;
+  const briefing = briefingResultado.status === 'fulfilled' ? briefingResultado.value.briefing : null;
 
   _briefingAtual = briefing || { cliente_id: clienteId, descritivo: '', redes_ativas: [] };
 
@@ -938,15 +953,26 @@ async function viewClientesLista() {
     <div id="tabela-clientes" class="card">${htmlCarregando()}</div>
   `;
 
+  if (_cacheListas.clientes) {
+    _clientesCache = _cacheListas.clientes;
+    renderTabelaClientes(_clientesCache);
+    ligarBusca('busca-clientes', (termo) => {
+      renderTabelaClientes(_clientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
+    });
+  }
+
   try {
     const { clientes } = await api('clientes');
     _clientesCache = clientes || [];
+    _cacheListas.clientes = _clientesCache;
     renderTabelaClientes(_clientesCache);
     ligarBusca('busca-clientes', (termo) => {
       renderTabelaClientes(_clientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
     });
   } catch (e) {
-    document.getElementById('tabela-clientes').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    if (!_cacheListas.clientes) {
+      document.getElementById('tabela-clientes').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    }
   }
 }
 
@@ -1406,20 +1432,31 @@ async function viewAssessoriaLista() {
     <div id="grade-assessoria">${htmlCarregando()}</div>
   `;
 
+  if (_cacheListas.assessoria) {
+    renderizarListaAssessoria(_cacheListas.assessoria);
+  }
+
   try {
     const { clientes } = await api('clientes?categoria=assessoria');
-    const el = document.getElementById('grade-assessoria');
-    if (!clientes || clientes.length === 0) {
-      el.innerHTML = `<div class="card"><p class="empty">Nenhum cliente de Assessoria vinculado a você ainda.<br>Peça ao administrador para vincular um cliente ao seu acesso.</p></div>`;
-      return;
-    }
-    el.innerHTML = htmlGradeClientes(clientes, '#/assessoria');
-    ligarBusca('busca-assessoria', (termo) => {
-      el.innerHTML = htmlGradeClientes(clientes.filter((c) => c.nome.toLowerCase().includes(termo)), '#/assessoria');
-    });
+    _cacheListas.assessoria = clientes || [];
+    renderizarListaAssessoria(clientes || []);
   } catch (e) {
-    document.getElementById('grade-assessoria').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    if (!_cacheListas.assessoria) {
+      document.getElementById('grade-assessoria').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    }
   }
+}
+
+function renderizarListaAssessoria(clientes) {
+  const el = document.getElementById('grade-assessoria');
+  if (!clientes || clientes.length === 0) {
+    el.innerHTML = `<div class="card"><p class="empty">Nenhum cliente de Assessoria vinculado a você ainda.<br>Peça ao administrador para vincular um cliente ao seu acesso.</p></div>`;
+    return;
+  }
+  el.innerHTML = htmlGradeClientes(clientes, '#/assessoria');
+  ligarBusca('busca-assessoria', (termo) => {
+    el.innerHTML = htmlGradeClientes(clientes.filter((c) => c.nome.toLowerCase().includes(termo)), '#/assessoria');
+  });
 }
 
 // ============================================================================
@@ -1464,9 +1501,11 @@ async function viewAssessoriaDetalhe(clienteId) {
   aeClienteId = clienteId;
 
   try {
-    const { cliente } = await api('clientes?id=' + clienteId);
+    const [{ cliente }, { dados }] = await Promise.all([
+      api('clientes?id=' + clienteId),
+      api('assessoria-relatorio?cliente_id=' + clienteId),
+    ]);
     aeCliente = cliente;
-    const { dados } = await api('assessoria-relatorio?cliente_id=' + clienteId);
     aeData = dados && Object.keys(dados).length ? dados : aeDef(cliente);
   } catch (e) {
     document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
@@ -1966,8 +2005,20 @@ async function viewDiagnosticoLista() {
     });
   });
 
+  const chaveCache = 'diagnostico_' + _abaDiagAtual;
+  if (_cacheListas[chaveCache]) {
+    const cache = _cacheListas[chaveCache];
+    renderGradeDiagnostico(cache);
+    ligarBusca('busca-diagnostico', (termo) => {
+      renderGradeDiagnostico(cache.filter((d) =>
+        (d.clientes?.nome || d.nome_prospect || '').toLowerCase().includes(termo)
+      ));
+    });
+  }
+
   try {
     const { diagnosticos } = await api('diagnosticos?tipo=' + _abaDiagAtual);
+    _cacheListas[chaveCache] = diagnosticos || [];
     renderGradeDiagnostico(diagnosticos || []);
     ligarBusca('busca-diagnostico', (termo) => {
       renderGradeDiagnostico((diagnosticos || []).filter((d) =>
@@ -1975,7 +2026,9 @@ async function viewDiagnosticoLista() {
       ));
     });
   } catch (e) {
-    document.getElementById('grade-diagnostico').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    if (!_cacheListas[chaveCache]) {
+      document.getElementById('grade-diagnostico').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    }
   }
 }
 
