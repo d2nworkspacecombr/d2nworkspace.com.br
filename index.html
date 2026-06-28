@@ -12,18 +12,46 @@
   --grad-navy:linear-gradient(135deg,var(--navy-600) 0%,var(--navy-900) 100%);
   --ink:#0e1626;--ink-soft:#5a6478;--ink-faint:#99a2b6;
   --paper:#f5f6fa;--line:#e9ebf1;
-  --shadow-md:0 10px 32px rgba(14,22,38,.09),0 2px 6px rgba(14,22,38,.05);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased}
-.wrap{width:100%;max-width:380px;padding:1.5rem}
+html,body{height:100%}
+body{
+  font-family:'Barlow',sans-serif;color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;
+  -webkit-font-smoothing:antialiased;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse 120% 80% at 50% -10%, #11264d 0%, #060c1a 55%, #02050c 100%);
+}
+
+/* CÉU ESTRELADO */
+.stars{position:absolute;inset:0;z-index:0;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:.95}}
+
+/* NEBULOSA SUTIL */
+.nebula{position:absolute;border-radius:50%;filter:blur(70px);opacity:.32;z-index:0;pointer-events:none}
+.nebula-1{width:480px;height:480px;background:radial-gradient(circle,var(--teal) 0%,transparent 70%);top:-180px;left:-160px}
+.nebula-2{width:420px;height:420px;background:radial-gradient(circle,#3a5fb8 0%,transparent 70%);bottom:-180px;right:-140px}
+
+/* ESTRELAS CADENTES */
+.shooting-star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:0;top:12%;left:80%;
+  animation:shoot 8s linear infinite}
+.shooting-star::before{content:'';position:absolute;top:50%;right:0;width:90px;height:1px;
+  background:linear-gradient(90deg,rgba(255,255,255,.9),transparent);transform:translateY(-50%)}
+.shooting-star.s2{top:55%;left:92%;animation-delay:4s}
+@keyframes shoot{
+  0%{opacity:0;transform:translate(0,0)}
+  4%{opacity:1}
+  20%{opacity:0;transform:translate(-460px,280px)}
+  100%{opacity:0}
+}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:380px;padding:1.5rem}
 .logo-row{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:2.2rem;width:100%}
-.logo-row img{width:54px;height:54px;border-radius:13px;margin-bottom:.9rem;box-shadow:0 6px 18px rgba(10,22,40,.18)}
+.logo-row img{width:54px;height:54px;border-radius:13px;margin-bottom:.9rem;box-shadow:0 0 26px rgba(34,211,211,.4),0 6px 18px rgba(0,0,0,.45)}
 .brand-word{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:23px;letter-spacing:.04em;text-transform:uppercase;
-  background:linear-gradient(120deg,var(--teal) 0%,var(--navy-700) 100%);-webkit-background-clip:text;background-clip:text;
+  background:linear-gradient(120deg,var(--teal) 0%,#8fb4ff 100%);-webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;color:transparent;line-height:1.1;text-align:center;width:100%}
-.logo-row p{font-size:13px;color:var(--ink-faint);margin-top:7px;text-align:center}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:2.2rem;box-shadow:var(--shadow-md)}
+.logo-row p{font-size:13px;color:rgba(255,255,255,.6);margin-top:8px;text-align:center;letter-spacing:.02em;font-style:italic}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:2.2rem;box-shadow:0 24px 70px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.05)}
 .field{margin-bottom:1.2rem}
 .field label{display:block;font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
 .field input{width:100%;padding:11px 14px;border:1.5px solid var(--line);border-radius:9px;font-family:'Barlow',sans-serif;font-size:14px;color:var(--ink);background:var(--paper);outline:none;transition:border-color .15s,background .15s}
@@ -31,16 +59,22 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .btn{width:100%;margin-top:.6rem;padding:14px;border:none;border-radius:9px;background:var(--grad-navy);color:#fff;font-family:'Sora',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(10,22,40,.22);transition:box-shadow .15s,transform .12s}
 .btn:hover{box-shadow:0 7px 20px rgba(10,22,40,.3);transform:translateY(-1px)}
 .btn:disabled{opacity:.55;cursor:default;transform:none}
-.erro{font-size:12.5px;color:#d3455a;margin:8px 0 0;line-height:1.5}
-.rodape{text-align:center;font-size:12px;color:var(--ink-faint);margin-top:1.6rem;line-height:1.7}
+.erro{font-size:12.5px;color:#ff8a9b;margin:8px 0 0;line-height:1.5}
+.rodape{text-align:center;font-size:12px;color:rgba(255,255,255,.42);margin-top:1.6rem;line-height:1.7}
 </style>
 </head>
 <body>
+<div class="stars" id="stars"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="shooting-star"></div>
+<div class="shooting-star s2"></div>
+
 <div class="wrap">
   <div class="logo-row">
     <img src="logo-icon.png" alt="D2N Carreira e Negócios">
     <span class="brand-word">Workspace</span>
-    <p>Plataforma interna D2N Carreira e Negócios</p>
+    <p>Um Universo de Possibilidades.</p>
   </div>
   <div class="card">
     <form id="form-login">
@@ -63,6 +97,21 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 </div>
 
 <script>
+// Gera o céu estrelado
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 110; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random() * 2 + 0.5;
+  s.style.width = size + 'px';
+  s.style.height = size + 'px';
+  s.style.top = Math.random() * 100 + '%';
+  s.style.left = Math.random() * 100 + '%';
+  s.style.animationDelay = (Math.random() * 4) + 's';
+  s.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+  starsEl.appendChild(s);
+}
+
 // Se já tiver um token E um perfil válido salvos, vai direto pro sistema
 const tokenSalvo = localStorage.getItem('d2n_token');
 const usuarioSalvo = localStorage.getItem('d2n_usuario');
