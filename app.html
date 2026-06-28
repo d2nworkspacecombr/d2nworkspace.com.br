@@ -1171,8 +1171,8 @@ async function abrirFormCompromisso() {
           <div class="field"><label>Data e horário</label><input type="datetime-local" name="data_inicio" required></div>
           <div class="field"><label>Cor / tag</label>
             <select name="cor">
-              <option value="#22d3d3">Teal</option>
-              <option value="#1d3f74">Navy</option>
+              <option value="#22d3d3">Turquesa</option>
+              <option value="#1d3f74">Azul-marinho</option>
               <option value="#d3455a">Vermelho</option>
               <option value="#c2820f">Âmbar</option>
               <option value="#0f8a6e">Verde</option>
@@ -1677,8 +1677,8 @@ function tfNovoProjeto() {
         <div class="field"><label>Nome</label><input name="nome" required></div>
         <div class="field"><label>Cor</label>
           <select name="cor">
-            <option value="#22d3d3">Teal</option>
-            <option value="#1d3f74">Navy</option>
+            <option value="#22d3d3">Turquesa</option>
+            <option value="#1d3f74">Azul-marinho</option>
             <option value="#d3455a">Vermelho</option>
             <option value="#c2820f">Âmbar</option>
             <option value="#0f8a6e">Verde</option>
@@ -2546,6 +2546,7 @@ async function viewProdutosLista() {
 
   try {
     const { produtos } = await api('produtos');
+    _produtosCache = produtos || [];
     renderTabelaProdutos(produtos || []);
     ligarBusca('busca-produtos', (termo) => {
       renderTabelaProdutos((produtos || []).filter((p) => p.nome.toLowerCase().includes(termo)));
@@ -2555,6 +2556,7 @@ async function viewProdutosLista() {
   }
 }
 
+let _produtosCache = [];
 const ROTULO_CATEGORIA = { assessoria: 'Assessoria', social_media: 'Social Media' };
 
 function renderTabelaProdutos(produtos) {
@@ -2565,7 +2567,7 @@ function renderTabelaProdutos(produtos) {
   }
   el.innerHTML = `
     <table>
-      <thead><tr><th>Nome</th><th>Descrição</th><th>Categoria</th><th>Status</th></tr></thead>
+      <thead><tr><th>Nome</th><th>Descrição</th><th>Categoria</th><th>Status</th>${usuario.role === 'admin' ? '<th></th>' : ''}</tr></thead>
       <tbody>
         ${produtos.map((p) => `
           <tr>
@@ -2573,6 +2575,12 @@ function renderTabelaProdutos(produtos) {
             <td class="sub">${esc(p.descricao) || '—'}</td>
             <td class="sub">${ROTULO_CATEGORIA[p.categoria] || '—'}</td>
             <td><span class="pill">${p.ativo ? 'ativo' : 'inativo'}</span></td>
+            ${usuario.role === 'admin' ? `
+              <td style="display:flex;gap:6px">
+                <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="toggleFormProduto('${p.id}')">Editar</button>
+                <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px;color:#d3455a;border-color:#d3455a" onclick="excluirProduto('${p.id}')">Excluir</button>
+              </td>
+            ` : ''}
           </tr>
         `).join('')}
       </tbody>
@@ -2580,22 +2588,31 @@ function renderTabelaProdutos(produtos) {
   `;
 }
 
-function toggleFormProduto() {
+function toggleFormProduto(id) {
+  const existente = id ? (_produtosCache || []).find((p) => p.id === id) : null;
   abrirModal({
     eyebrow: 'Cadastro',
-    titulo: 'Novo produto',
+    titulo: existente ? 'Editar produto' : 'Novo produto',
     corpoHtml: `
       <form id="novo-produto-form">
-        <div class="field"><label>Nome do produto</label><input name="nome" required></div>
-        <div class="field"><label>Descrição</label><textarea name="descricao" rows="3"></textarea></div>
+        <div class="field"><label>Nome do produto</label><input name="nome" value="${esc(existente?.nome || '')}" required></div>
+        <div class="field"><label>Descrição</label><textarea name="descricao" rows="3">${esc(existente?.descricao || '')}</textarea></div>
         <div class="field">
           <label>Categoria (usada pelos módulos de Negócios para filtrar)</label>
           <select name="categoria">
-            <option value="">Nenhuma (não aparece em módulo filtrado)</option>
-            <option value="assessoria">Assessoria</option>
-            <option value="social_media">Social Media</option>
+            <option value="" ${!existente?.categoria ? 'selected' : ''}>Nenhuma (não aparece em módulo filtrado)</option>
+            <option value="assessoria" ${existente?.categoria === 'assessoria' ? 'selected' : ''}>Assessoria</option>
+            <option value="social_media" ${existente?.categoria === 'social_media' ? 'selected' : ''}>Social Media</option>
           </select>
         </div>
+        ${existente ? `
+          <div class="field"><label>Status</label>
+            <select name="ativo">
+              <option value="true" ${existente.ativo ? 'selected' : ''}>Ativo</option>
+              <option value="false" ${!existente.ativo ? 'selected' : ''}>Inativo</option>
+            </select>
+          </div>
+        ` : ''}
         <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar produto</button>
       </form>
     `,
@@ -2603,20 +2620,33 @@ function toggleFormProduto() {
   document.getElementById('novo-produto-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
+    const payload = {
+      nome: form.nome.value,
+      descricao: form.descricao.value,
+      categoria: form.categoria.value || null,
+    };
+    if (existente) payload.ativo = form.ativo.value === 'true';
     try {
-      await api('produtos', {
-        method: 'POST',
-        body: JSON.stringify({
-          nome: form.nome.value,
-          descricao: form.descricao.value,
-          categoria: form.categoria.value || null,
-        }),
-      });
-      toast('Produto criado com sucesso');
+      if (existente) {
+        await api('produtos?id=' + existente.id, { method: 'PATCH', body: JSON.stringify(payload) });
+        toast('Produto atualizado');
+      } else {
+        await api('produtos', { method: 'POST', body: JSON.stringify(payload) });
+        toast('Produto criado com sucesso');
+      }
       fecharModal();
       viewProdutosLista();
     } catch (err) { toast(err.message); }
   });
+}
+
+async function excluirProduto(id) {
+  if (!confirm('Excluir este produto? Se algum cliente já tiver esse produto vinculado, a exclusão pode ser bloqueada.')) return;
+  try {
+    await api('produtos?id=' + id, { method: 'DELETE' });
+    toast('Produto excluído');
+    viewProdutosLista();
+  } catch (e) { toast(e.message); }
 }
 
 // ============================================================================
