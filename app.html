@@ -1292,7 +1292,11 @@ function renderTfNav() {
       <div class="tf-nav-titulo">Projetos <button class="tf-add" onclick="tfNovoProjeto()" title="Novo projeto">+</button></div>
       ${_tfProjetos.length === 0 ? `<p class="sub" style="font-size:12px">Nenhum projeto ainda.</p>` : _tfProjetos.map((p) => `
         <div class="tf-proj-item ${_tfProjetoId === p.id ? 'active' : ''}" onclick="tfAbrirProjeto('${p.id}')">
-          <div class="tf-proj-nome"><span class="tf-proj-dot" style="background:${esc(p.cor)}"></span>${esc(p.nome)}</div>
+          <div class="tf-proj-nome">
+            <span class="tf-proj-dot" style="background:${esc(p.cor)}"></span>
+            <span style="flex:1">${esc(p.nome)}</span>
+            ${(p.criado_por === usuario.id || usuario.role === 'admin') ? `<button class="ae-del" style="width:20px;height:20px;font-size:11px" title="Excluir projeto" onclick="event.stopPropagation();excluirProjeto('${p.id}')">✕</button>` : ''}
+          </div>
           <div class="tf-proj-barra"><div style="width:${p.progresso}%"></div></div>
           <div class="tf-proj-pct">${p.progresso}% · ${p.tarefas_concluidas}/${p.total_tarefas}</div>
         </div>
@@ -1652,6 +1656,16 @@ async function tfExcluir(id) {
     document.getElementById('tf-painel').innerHTML = `<p class="tf-painel-vazio">Selecione uma tarefa para ver os detalhes.</p>`;
     tfCarregarArvore();
     tfAtualizarProgressoProjetos();
+  } catch (e) { toast(e.message); }
+}
+
+async function excluirProjeto(id) {
+  if (!confirm('Excluir este projeto? As tarefas dentro dele não serão excluídas, só ficam sem projeto (vão pro Inbox).')) return;
+  try {
+    await api('projetos?id=' + id, { method: 'DELETE' });
+    toast('Projeto excluído');
+    if (_tfProjetoId === id) { _tfProjetoId = null; tfTrocarVisao('inbox'); }
+    else tfAtualizarProgressoProjetos();
   } catch (e) { toast(e.message); }
 }
 
