@@ -774,13 +774,14 @@ const NAV_GRUPOS = [
     ],
   },
   {
-    titulo: 'Negócios',
+    titulo: 'Módulos',
     itens: [
       { hash: '#/briefing', label: 'Briefing do cliente', icone: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>' },
       { hash: '#/diagnostico', label: 'Diagnóstico', icone: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
       { hash: '#/assessoria', label: 'Assessoria', icone: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
       { hash: '#/social-media', label: 'Social Media', icone: '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>', em_breve: true },
       { hash: '#/trafego-pago', label: 'Tráfego Pago', icone: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', em_breve: true },
+      { hash: '#/ferramentas', label: 'Ferramentas', icone: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>', em_breve: true },
     ],
   },
 ];
@@ -865,8 +866,41 @@ function viewInicio() {
     </p>
     <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin:1.75rem 0 .9rem">Seus compromissos da semana</h2>
     <div id="inicio-agenda">${htmlCarregando()}</div>
+    <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin:1.75rem 0 .9rem">Suas tarefas do mês</h2>
+    <div id="inicio-tarefas">${htmlCarregando()}</div>
   `;
   carregarAgendaInicio();
+  carregarTarefasInicio();
+}
+
+async function carregarTarefasInicio() {
+  const el = document.getElementById('inicio-tarefas');
+  try {
+    const { tarefas } = await api('tarefas?visao=mes');
+    if (!tarefas || tarefas.length === 0) {
+      el.innerHTML = `<p class="empty">Nenhuma tarefa com prazo este mês.</p>`;
+      return;
+    }
+    el.innerHTML = tarefas.map((t) => htmlTarefaResumoInicio(t)).join('');
+  } catch (e) {
+    el.innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function htmlTarefaResumoInicio(t) {
+  const corPrio = TF_CORES_PRIORIDADE[t.prioridade] || '#22d3d3';
+  const hoje = new Date().toISOString().slice(0, 10);
+  const atrasada = t.prazo && t.prazo < hoje;
+  return `
+    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer" onclick="location.hash='#/tarefas'">
+      <span style="background:${corPrio};width:8px;height:8px;border-radius:50%;flex-shrink:0"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Sora',sans-serif;font-weight:600;font-size:13.5px;color:var(--navy-700)">${esc(t.titulo)}</div>
+        <div style="font-size:12px;color:var(--ink-faint)">${t.projeto ? esc(t.projeto.nome) + ' · ' : ''}${t.prazo ? formatarDataBR(t.prazo) : ''}</div>
+      </div>
+      ${atrasada ? `<span class="tf-prazo atrasada">Atrasada</span>` : ''}
+    </div>
+  `;
 }
 
 async function carregarAgendaInicio() {
@@ -915,6 +949,10 @@ function formatarPeriodoAgenda(inicio, fim) {
   return inicio.toLocaleDateString('pt-BR', opts) + ' — ' + fim.toLocaleDateString('pt-BR', opts);
 }
 
+function capitalizar(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 async function viewAgendaLista() {
   document.getElementById('main').innerHTML = `
     <div class="eyebrow">Geral</div>
@@ -953,7 +991,9 @@ let _agendaCache = [];
 
 async function carregarAgenda() {
   const { inicio, fim } = _agendaModo === 'semana' ? agendaIntervaloSemana(_agendaRef) : agendaIntervaloMes(_agendaRef);
-  document.getElementById('agenda-periodo-label').textContent = formatarPeriodoAgenda(inicio, fim);
+  document.getElementById('agenda-periodo-label').textContent = _agendaModo === 'mes'
+    ? capitalizar(_agendaRef.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }))
+    : formatarPeriodoAgenda(inicio, fim);
 
   try {
     const { compromissos } = await api('agenda?inicio=' + inicio.toISOString() + '&fim=' + fim.toISOString());
