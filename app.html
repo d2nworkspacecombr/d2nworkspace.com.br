@@ -354,7 +354,7 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .ae-task-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .ae-task-top input[type=text]{flex:1;background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 11px;font-size:13.5px;color:var(--ink);outline:none}
 .ae-task-top input[type=text]:focus{border-color:var(--teal)}
-.ae-task-bottom{display:flex;gap:9px;align-items:flex-end}
+.ae-task-bottom{display:flex;gap:14px;align-items:flex-start}
 .ae-task-bottom .ae-field{flex:1;margin-bottom:0}
 .ae-task-check{width:30px;height:30px;border-radius:8px;border:1.8px solid var(--line);background:#fff;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
 .ae-task-check.feita{background:var(--teal);border-color:var(--teal)}
@@ -2989,15 +2989,17 @@ function aeHtmlTask(t) {
         <input type="text" placeholder="Descrição da tarefa" value="${esc(t.label)}" oninput="aeAutosave()">
         <button class="ae-del" onclick="this.closest('.ae-task-card').remove();aeAutosave()">✕</button>
       </div>
-      <div class="ae-field" style="margin-bottom:9px;max-width:200px">
-        <select onchange="aeToggleTipoResp(this, this.value)">
-          <option value="assessor" ${t.tipo !== 'interlocutor' ? 'selected' : ''}>Assessor</option>
-          <option value="interlocutor" ${t.tipo === 'interlocutor' ? 'selected' : ''}>Interlocutor</option>
-        </select>
-      </div>
-      <div class="ae-resp-area">${respArea}</div>
       <div class="ae-task-bottom">
-        <div class="ae-field" style="margin-bottom:0"><label>Entrega</label><input type="date" class="ae-task-dl" value="${esc(t.dl)}" oninput="aeAutosave()"></div>
+        <div style="flex:1;min-width:0">
+          <div class="ae-field" style="margin-bottom:7px;max-width:200px">
+            <select onchange="aeToggleTipoResp(this, this.value)">
+              <option value="assessor" ${t.tipo !== 'interlocutor' ? 'selected' : ''}>Assessor</option>
+              <option value="interlocutor" ${t.tipo === 'interlocutor' ? 'selected' : ''}>Interlocutor</option>
+            </select>
+          </div>
+          <div class="ae-resp-area">${respArea}</div>
+        </div>
+        <div class="ae-field" style="margin-bottom:0;width:160px;flex-shrink:0"><label>Entrega</label><input type="date" class="ae-task-dl" value="${esc(t.dl)}" oninput="aeAutosave()"></div>
       </div>
     </div>
   `;
