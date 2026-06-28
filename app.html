@@ -2942,9 +2942,11 @@ function aeHtmlTask(t) {
         <input type="text" placeholder="Descrição da tarefa" value="${esc(t.label)}" oninput="aeAutosave()">
         <button class="ae-del" onclick="this.closest('.ae-task-card').remove();aeAutosave()">✕</button>
       </div>
-      <div class="ae-toggle-group">
-        <button type="button" class="ae-toggle-btn ${t.tipo !== 'interlocutor' ? 'active' : ''}" onclick="aeToggleTipoResp(this,'assessor')">Assessor</button>
-        <button type="button" class="ae-toggle-btn ${t.tipo === 'interlocutor' ? 'active' : ''}" onclick="aeToggleTipoResp(this,'interlocutor')">Interlocutor</button>
+      <div class="ae-field" style="margin-bottom:9px;max-width:200px">
+        <select onchange="aeToggleTipoResp(this, this.value)">
+          <option value="assessor" ${t.tipo !== 'interlocutor' ? 'selected' : ''}>Assessor</option>
+          <option value="interlocutor" ${t.tipo === 'interlocutor' ? 'selected' : ''}>Interlocutor</option>
+        </select>
       </div>
       <div class="ae-resp-area">${respArea}</div>
       <div class="ae-task-bottom">
@@ -2971,10 +2973,8 @@ function aeToggleTaskDone(el) {
   aeAutosave();
 }
 
-function aeToggleTipoResp(btn, tipo) {
-  const card = btn.closest('.ae-task-card');
-  card.querySelectorAll('.ae-toggle-btn').forEach((b) => b.classList.remove('active'));
-  btn.classList.add('active');
+function aeToggleTipoResp(el, tipo) {
+  const card = el.closest('.ae-task-card');
   card.dataset.tipo = tipo;
   const area = card.querySelector('.ae-resp-area');
   if (tipo === 'assessor') {
