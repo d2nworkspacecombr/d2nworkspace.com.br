@@ -122,7 +122,10 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 
 .sidebar-foot{padding:1.1rem 1.2rem 1.3rem;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
 .avatar{width:33px;height:33px;border-radius:50%;background:var(--grad-accent);display:flex;align-items:center;justify-content:center;
-  font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;color:#fff;flex-shrink:0;text-transform:uppercase}
+  font-family:'Sora',sans-serif;font-size:11.5px;font-weight:600;color:#fff;flex-shrink:0;text-transform:uppercase;position:relative;cursor:pointer;overflow:hidden}
+.avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.avatar-cam{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:var(--navy-700);border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #0a1628;pointer-events:none}
+.avatar-cam svg{width:8px;height:8px}
 .sidebar-foot .quem{flex:1;min-width:0}
 .sidebar-foot .nome{font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sidebar-foot .cargo{font-size:10.5px;color:#5b7da3;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
@@ -455,7 +458,13 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="sidebar-foot">
-      <div class="avatar" id="avatar-usuario">—</div>
+      <div class="avatar" id="avatar-usuario" title="Trocar foto de perfil" onclick="document.getElementById('input-avatar').click()">
+        —
+        <span class="avatar-cam">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </span>
+      </div>
+      <input type="file" id="input-avatar" accept="image/*" style="display:none">
       <div class="quem">
         <div class="nome" id="nome-usuario">—</div>
         <div class="cargo" id="cargo-usuario">—</div>
@@ -499,8 +508,40 @@ if (!tokenAtual || !usuario) {
 document.getElementById('nome-usuario').textContent = usuario?.nome || '';
 document.getElementById('cargo-usuario').textContent =
   usuario?.role === 'admin' ? 'Administrador' : (usuario?.cargo || 'Colaborador');
-document.getElementById('avatar-usuario').textContent =
-  (usuario?.nome || '').trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('');
+
+function renderAvatarUsuario() {
+  const el = document.getElementById('avatar-usuario');
+  const iniciais = (usuario?.nome || '').trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('');
+  const camIcon = `<span class="avatar-cam"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>`;
+  el.innerHTML = (usuario?.foto_url ? `<img src="${usuario.foto_url.replace(/"/g, '')}" alt="">` : iniciais) + camIcon;
+}
+renderAvatarUsuario();
+
+document.getElementById('input-avatar').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) {
+    alert('A imagem precisa ter até 3MB.');
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(',')[1];
+    try {
+      const { foto_url } = await api('upload-avatar', {
+        method: 'POST',
+        body: JSON.stringify({ filename: file.name, base64 }),
+      });
+      usuario.foto_url = foto_url;
+      localStorage.setItem('d2n_usuario', JSON.stringify(usuario));
+      renderAvatarUsuario();
+      toast('Foto de perfil atualizada');
+    } catch (err) { toast(err.message); }
+    e.target.value = '';
+  };
+  reader.readAsDataURL(file);
+});
 
 function sair() {
   localStorage.removeItem('d2n_token');
@@ -864,10 +905,16 @@ function viewInicio() {
     <p class="sub" style="margin-top:.5rem;max-width:480px;font-size:14px;color:var(--ink-soft)">
       Use o menu à esquerda para acessar os clientes e os módulos de negócio.
     </p>
-    <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin:1.75rem 0 .9rem">Seus compromissos da semana</h2>
-    <div id="inicio-agenda">${htmlCarregando()}</div>
-    <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin:1.75rem 0 .9rem">Suas tarefas do mês</h2>
-    <div id="inicio-tarefas">${htmlCarregando()}</div>
+    <div class="grid2" style="margin-top:1.75rem;align-items:start">
+      <div>
+        <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin-bottom:.9rem">Seus compromissos da semana</h2>
+        <div id="inicio-agenda">${htmlCarregando()}</div>
+      </div>
+      <div>
+        <h2 style="font-family:'Sora',sans-serif;font-size:16px;color:var(--navy-700);margin-bottom:.9rem">Suas tarefas do mês</h2>
+        <div id="inicio-tarefas">${htmlCarregando()}</div>
+      </div>
+    </div>
   `;
   carregarAgendaInicio();
   carregarTarefasInicio();
