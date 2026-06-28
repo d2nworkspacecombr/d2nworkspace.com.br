@@ -451,7 +451,6 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
       <img src="logo-icon.png" alt="D2N">
       <div>
         <span class="brand-word">Workspace</span>
-        <small>Carreira &amp; Negócios</small>
       </div>
     </div>
     <nav class="nav" id="nav"></nav>
@@ -2048,6 +2047,7 @@ async function removerArquivoBriefing(clienteId, filename) {
 // VIEW: CLIENTES (lista + cadastro)
 // ============================================================================
 let _clientesCache = [];
+let _colaboradoresCache = [];
 
 async function viewClientesLista() {
   document.getElementById('main').innerHTML = `
@@ -2368,6 +2368,7 @@ async function viewColaboradoresLista() {
 
   try {
     const { colaboradores } = await api('colaboradores');
+    _colaboradoresCache = colaboradores || [];
     renderTabelaColaboradores(colaboradores || []);
     ligarBusca('busca-colaboradores', (termo) => {
       renderTabelaColaboradores((colaboradores || []).filter((c) => c.nome.toLowerCase().includes(termo)));
@@ -2395,8 +2396,12 @@ function renderTabelaColaboradores(colaboradores) {
             <td>${c.role === 'admin' ? 'Administrador' : 'Colaborador'}</td>
             <td><span class="pill">${c.ativo ? 'ativo' : 'inativo'}</span></td>
             ${usuario.role === 'admin' ? `
-              <td>
-                ${c.id !== usuario.id ? `<button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="toggleAtivoColaborador('${c.id}', ${!c.ativo})">${c.ativo ? 'Inativar' : 'Ativar'}</button>` : ''}
+              <td style="display:flex;gap:6px">
+                <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="editarColaborador('${c.id}')">Editar</button>
+                ${c.id !== usuario.id ? `
+                  <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="toggleAtivoColaborador('${c.id}', ${!c.ativo})">${c.ativo ? 'Inativar' : 'Ativar'}</button>
+                  <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px;color:#d3455a;border-color:#d3455a" onclick="excluirColaborador('${c.id}')">Excluir</button>
+                ` : ''}
               </td>
             ` : ''}
           </tr>
@@ -2404,6 +2409,48 @@ function renderTabelaColaboradores(colaboradores) {
       </tbody>
     </table>
   `;
+}
+
+function editarColaborador(id) {
+  const c = (_colaboradoresCache || []).find((x) => x.id === id);
+  if (!c) return;
+  abrirModal({
+    eyebrow: 'Colaborador',
+    titulo: 'Editar colaborador',
+    corpoHtml: `
+      <form id="form-editar-colab">
+        <div class="field"><label>Nome</label><input name="nome" value="${esc(c.nome)}" required></div>
+        <div class="field"><label>E-mail (login)</label><input type="email" name="email" value="${esc(c.email)}" required></div>
+        <div class="field"><label>Cargo</label><input name="cargo" value="${esc(c.cargo) || ''}"></div>
+        <p class="sub" style="font-size:12px;margin-bottom:1rem">Trocar o e-mail também atualiza o login dessa pessoa.</p>
+        <button class="btn btn-navy" type="submit" style="width:100%">Salvar alterações</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-editar-colab').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const btn = f.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      await api('colaboradores?id=' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({ nome: f.nome.value, email: f.email.value, cargo: f.cargo.value }),
+      });
+      toast('Colaborador atualizado');
+      fecharModal();
+      viewColaboradoresLista();
+    } catch (err) { toast(err.message); btn.disabled = false; }
+  });
+}
+
+async function excluirColaborador(id) {
+  if (!confirm('Excluir esse colaborador definitivamente? Essa ação remove o login dele e não pode ser desfeita.\n\nSe ele já criou clientes, tarefas ou outros registros, a exclusão pode ser bloqueada pelo banco — nesse caso, use "Inativar".')) return;
+  try {
+    await api('colaboradores?id=' + id, { method: 'DELETE' });
+    toast('Colaborador excluído');
+    viewColaboradoresLista();
+  } catch (e) { toast(e.message); }
 }
 
 async function toggleAtivoColaborador(id, ativo) {
