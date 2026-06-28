@@ -16,6 +16,7 @@ const ROTAS = {
   "diagnosticos": () => require("../lib/diagnosticos"),
   "assessoria-relatorio": () => require("../lib/assessoria-relatorio"),
   "upload-logo": () => require("../lib/upload-logo"),
+  "upload-avatar": () => require("../lib/upload-avatar"),
   "briefing": () => require("../lib/briefing"),
   "briefing-arquivos": () => require("../lib/briefing-arquivos"),
   "agenda": () => require("../lib/agenda"),
