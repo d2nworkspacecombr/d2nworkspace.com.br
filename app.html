@@ -48,6 +48,30 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .nav-em-breve em{margin-left:auto;font-style:normal;font-size:9px;background:rgba(255,255,255,.06);color:#6b85a8;padding:2px 7px;border-radius:20px;font-weight:600;letter-spacing:.03em}
 .nav-badge{margin-left:auto;font-size:9px;background:var(--teal);color:var(--navy-900);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.03em;display:none}
 
+/* PIPELINE — KANBAN COMERCIAL */
+.kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:1rem;align-items:flex-start}
+.kanban-col{flex-shrink:0;width:220px;background:var(--paper);border-radius:var(--r-md);padding:10px}
+.kanban-col-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.kanban-col-titulo{font-family:'Sora',sans-serif;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+.kanban-col-count{font-family:'Sora',sans-serif;font-size:10px;font-weight:700;background:#fff;color:var(--ink-faint);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
+.kanban-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;cursor:pointer;transition:.12s}
+.kanban-card:hover{border-color:var(--teal);box-shadow:0 2px 10px rgba(34,211,211,.12)}
+.kanban-card.ativo{border-color:var(--teal);box-shadow:0 0 0 2px rgba(34,211,211,.2)}
+.kanban-card-titulo{font-size:13px;font-weight:600;color:var(--navy-700);margin-bottom:5px;line-height:1.35}
+.kanban-card-sub{font-size:11px;color:var(--ink-faint);line-height:1.4}
+.kanban-add{width:100%;border:none;background:none;color:var(--teal-deep);font-size:12px;font-weight:600;padding:7px;border-radius:7px;cursor:pointer;text-align:left}
+.kanban-add:hover{background:rgba(34,211,211,.07)}
+
+/* PAINEL LATERAL DO CARD */
+.kanban-layout{display:flex;gap:0;height:100%}
+.kanban-main{flex:1;min-width:0;overflow-x:auto}
+.kanban-painel{width:340px;flex-shrink:0;border-left:1px solid var(--line);padding:1.25rem;overflow-y:auto;background:#fff;border-radius:0 var(--r-lg) var(--r-lg) 0}
+.kanban-painel-vazio{color:var(--ink-faint);font-size:13px;text-align:center;padding-top:3rem}
+.kp-estagio-sel{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
+.kp-est-btn{border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-size:10.5px;font-weight:600;font-family:'Sora',sans-serif;padding:4px 10px;border-radius:20px;cursor:pointer;transition:.12s}
+.kp-est-btn.active{background:var(--navy-700);color:#fff;border-color:var(--navy-700)}
+.kp-est-btn:hover:not(.active){border-color:var(--navy-600);color:var(--navy-700)}
+
 /* AGENDA — GRADE DE CALENDÁRIO (Semana com horários / Mês em grade) */
 .cal-week{display:flex;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:#fff}
 .cal-hours{width:52px;flex-shrink:0;border-right:1px solid var(--line)}
@@ -126,6 +150,10 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
 .avatar-cam{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:var(--navy-700);border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid #0a1628;pointer-events:none}
 .avatar-cam svg{width:8px;height:8px}
+.logo-editor{position:relative;width:56px;height:56px;border-radius:13px;overflow:hidden;flex-shrink:0;background:var(--paper);border:1px solid var(--line)}
+.logo-editor img{width:100%;height:100%;object-fit:cover}
+.logo-editor-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:18px;color:var(--ink-faint);text-transform:uppercase}
+.logo-editor.editavel{cursor:pointer}
 .sidebar-foot .quem{flex:1;min-width:0}
 .sidebar-foot .nome{font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sidebar-foot .cargo{font-size:10.5px;color:#5b7da3;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
@@ -817,7 +845,7 @@ const NAV_GRUPOS = [
   {
     titulo: 'Módulos',
     itens: [
-      { hash: '#/briefing', label: 'Briefing do cliente', icone: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>' },
+      { hash: '#/pipeline', label: 'Pipeline Comercial', icone: '<rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="9" rx="1"/>' },
       { hash: '#/diagnostico', label: 'Diagnóstico', icone: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
       { hash: '#/assessoria', label: 'Assessoria', icone: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
       { hash: '#/social-media', label: 'Social Media', icone: '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>', em_breve: true },
@@ -878,8 +906,7 @@ function rotear() {
   if (partes[0] === 'clientes') return viewClientesLista();
   if (partes[0] === 'colaboradores') return viewColaboradoresLista();
   if (partes[0] === 'produtos') return viewProdutosLista();
-  if (partes[0] === 'briefing' && partes[1]) return viewBriefingDetalhe(partes[1]);
-  if (partes[0] === 'briefing') return viewBriefingLista();
+  if (partes[0] === 'pipeline') return viewPipeline();
   if (partes[0] === 'diagnostico' && partes[1]) return viewDiagnosticoDetalhe(partes[1]);
   if (partes[0] === 'diagnostico') return viewDiagnosticoLista();
   if (partes[0] === 'agenda') return viewAgendaLista();
@@ -1824,6 +1851,261 @@ function viewEmConstrucao(titulo) {
 // VIEW: BRIEFING DO CLIENTE — acesso livre pra qualquer colaborador,
 // igual ao Diagnóstico Externo (não depende de vínculo com o cliente)
 // ============================================================================
+// ============================================================================
+// VIEW: PIPELINE COMERCIAL — Kanban de prospects
+// ============================================================================
+const PIPELINE_ESTAGIOS = [
+  { id: 'qualificacao',         label: 'Em Qualificação' },
+  { id: 'reuniao_agendada',     label: 'Reunião Agendada' },
+  { id: 'negociacao',           label: 'Em Negociação' },
+  { id: 'elaboracao_contrato',  label: 'Elaboração do Contrato' },
+  { id: 'aguardando_assinatura',label: 'Aguardando Assinatura' },
+  { id: 'onboarding',           label: 'Onboarding' },
+];
+
+const PIPELINE_CORES = {
+  qualificacao: '#8aa0bd',
+  reuniao_agendada: '#22d3d3',
+  negociacao: '#c2820f',
+  elaboracao_contrato: '#534ab7',
+  aguardando_assinatura: '#d3455a',
+  onboarding: '#0f8a6e',
+};
+
+let _pipelineCards = [];
+let _pipelineCardAtivo = null;
+
+async function viewPipeline() {
+  document.getElementById('main').innerHTML = `
+    <div class="eyebrow">Módulos</div>
+    <h1>Pipeline Comercial</h1>
+    <p class="sub" style="margin:.4rem 0 1.1rem;max-width:520px">Acompanhe seus prospects ao longo da jornada comercial.</p>
+    <div class="kanban-layout">
+      <div class="kanban-main">
+        <div id="kanban-board" class="kanban-wrap">${htmlCarregando()}</div>
+      </div>
+      <div class="kanban-painel" id="kanban-painel">
+        <p class="kanban-painel-vazio">Clique em um card para ver os detalhes.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const { cards } = await api('pipeline');
+    _pipelineCards = cards || [];
+    renderKanban();
+  } catch (e) {
+    document.getElementById('kanban-board').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+  }
+}
+
+function renderKanban() {
+  const el = document.getElementById('kanban-board');
+  el.innerHTML = PIPELINE_ESTAGIOS.map((est) => {
+    const cards = _pipelineCards.filter((c) => c.estagio === est.id);
+    return `
+      <div class="kanban-col">
+        <div class="kanban-col-head">
+          <div class="kanban-col-titulo" style="color:${PIPELINE_CORES[est.id]}">${esc(est.label)}</div>
+          <div class="kanban-col-count">${cards.length}</div>
+        </div>
+        <div id="kcol-${est.id}">
+          ${cards.map((c) => htmlKanbanCard(c)).join('')}
+        </div>
+        <button class="kanban-add" onclick="novoCard('${est.id}')">+ Adicionar</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function htmlKanbanCard(c) {
+  const ativo = _pipelineCardAtivo === c.id;
+  return `
+    <div class="kanban-card ${ativo ? 'ativo' : ''}" onclick="abrirPainelCard('${c.id}')">
+      <div class="kanban-card-titulo">${esc(c.titulo)}</div>
+      ${c.produtos_potenciais ? `<div class="kanban-card-sub">${esc(c.produtos_potenciais)}</div>` : ''}
+      ${c.responsavel ? `<div class="kanban-card-sub" style="margin-top:4px">👤 ${esc(c.responsavel.nome)}</div>` : ''}
+    </div>
+  `;
+}
+
+function abrirPainelCard(id) {
+  _pipelineCardAtivo = id;
+  renderKanban();
+
+  const c = _pipelineCards.find((x) => x.id === id);
+  if (!c) return;
+
+  const estAtual = PIPELINE_ESTAGIOS.findIndex((e) => e.id === c.estagio);
+
+  document.getElementById('kanban-painel').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
+      <div style="font-family:'Sora',sans-serif;font-size:11px;color:${PIPELINE_CORES[c.estagio]};font-weight:700;text-transform:uppercase;letter-spacing:.04em">
+        ${PIPELINE_ESTAGIOS.find((e) => e.id === c.estagio)?.label || ''}
+      </div>
+      <button class="ae-del" onclick="excluirCard('${c.id}')">✕</button>
+    </div>
+
+    <div class="ae-field" style="margin-bottom:.9rem">
+      <label>Nome do prospect</label>
+      <input id="kp-titulo" value="${esc(c.titulo)}" onchange="salvarCampoCard('${c.id}', 'titulo', this.value)">
+    </div>
+
+    <div class="ae-field" style="margin-bottom:.9rem">
+      <label>Dossiê Comercial</label>
+      <textarea id="kp-dossie" rows="5" onchange="salvarCampoCard('${c.id}', 'dossie', this.value)">${esc(c.dossie || '')}</textarea>
+    </div>
+
+    <div class="ae-field" style="margin-bottom:.9rem">
+      <label>Produtos potenciais</label>
+      <input id="kp-produtos" value="${esc(c.produtos_potenciais || '')}" placeholder="Ex: Assessoria Estratégica, Social Media" onchange="salvarCampoCard('${c.id}', 'produtos_potenciais', this.value)">
+    </div>
+
+    ${c.diagnosticos ? `
+      <div class="ae-card" style="margin-bottom:.9rem;padding:.75rem 1rem">
+        <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px">Diagnóstico vinculado</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="pill">${c.diagnosticos.status === 'concluido' ? 'Concluído' : 'Em andamento'}</span>
+          <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="location.hash='#/diagnostico/${c.diagnostico_id}'">Ver diagnóstico</button>
+        </div>
+      </div>
+    ` : `
+      <div class="ae-field" style="margin-bottom:.9rem">
+        <label>Vincular diagnóstico externo</label>
+        <select onchange="salvarCampoCard('${c.id}', 'diagnostico_id', this.value || null)" id="kp-diag">
+          <option value="">— Nenhum —</option>
+        </select>
+      </div>
+    `}
+
+    <div style="margin-bottom:1rem">
+      <label style="display:block;font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px">Mover para</label>
+      <div class="kp-estagio-sel">
+        ${PIPELINE_ESTAGIOS.map((e) => `
+          <button class="kp-est-btn ${c.estagio === e.id ? 'active' : ''}" onclick="moverCard('${c.id}', '${e.id}')">${esc(e.label)}</button>
+        `).join('')}
+      </div>
+    </div>
+
+    ${c.estagio === 'onboarding' && !c.cliente_id ? `
+      <button class="btn btn-grad" style="width:100%;margin-top:.4rem" onclick="converterEmCliente('${c.id}')">
+        Converter em Cliente →
+      </button>
+    ` : c.cliente_id ? `
+      <div class="pill" style="text-align:center;padding:8px">Cliente criado no sistema</div>
+    ` : ''}
+  `;
+
+  if (!c.diagnosticos) carregarDiagnosticosExternos();
+}
+
+async function carregarDiagnosticosExternos() {
+  try {
+    const { diagnosticos } = await api('diagnosticos?tipo=externo');
+    const sel = document.getElementById('kp-diag');
+    if (!sel) return;
+    (diagnosticos || []).forEach((d) => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.nome_prospect || 'Sem nome';
+      sel.appendChild(opt);
+    });
+  } catch (e) { /* silencioso */ }
+}
+
+async function salvarCampoCard(id, campo, valor) {
+  try {
+    const { card } = await api('pipeline?id=' + id, { method: 'PATCH', body: JSON.stringify({ [campo]: valor }) });
+    _pipelineCards = _pipelineCards.map((c) => c.id === id ? card : c);
+    renderKanban();
+  } catch (e) { toast(e.message); }
+}
+
+async function moverCard(id, estagio) {
+  try {
+    const { card } = await api('pipeline?id=' + id, { method: 'PATCH', body: JSON.stringify({ estagio }) });
+    _pipelineCards = _pipelineCards.map((c) => c.id === id ? card : c);
+    renderKanban();
+    abrirPainelCard(id);
+  } catch (e) { toast(e.message); }
+}
+
+async function excluirCard(id) {
+  if (!confirm('Excluir este prospect do pipeline?')) return;
+  try {
+    await api('pipeline?id=' + id, { method: 'DELETE' });
+    _pipelineCards = _pipelineCards.filter((c) => c.id !== id);
+    _pipelineCardAtivo = null;
+    document.getElementById('kanban-painel').innerHTML = `<p class="kanban-painel-vazio">Clique em um card para ver os detalhes.</p>`;
+    renderKanban();
+    toast('Prospect removido do pipeline');
+  } catch (e) { toast(e.message); }
+}
+
+function novoCard(estagio) {
+  abrirModal({
+    eyebrow: 'Pipeline Comercial',
+    titulo: 'Novo prospect',
+    corpoHtml: `
+      <form id="form-pipeline">
+        <div class="field"><label>Nome do prospect / empresa</label><input name="titulo" required></div>
+        <div class="field"><label>Produtos potenciais</label><input name="produtos" placeholder="Ex: Assessoria Estratégica"></div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar card</button>
+      </form>
+    `,
+  });
+  document.getElementById('form-pipeline').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    try {
+      const { card } = await api('pipeline', {
+        method: 'POST',
+        body: JSON.stringify({ titulo: f.titulo.value, estagio, produtos_potenciais: f.produtos.value || null }),
+      });
+      _pipelineCards.push(card);
+      fecharModal();
+      renderKanban();
+      abrirPainelCard(card.id);
+    } catch (err) { toast(err.message); }
+  });
+}
+
+async function converterEmCliente(cardId) {
+  const c = _pipelineCards.find((x) => x.id === cardId);
+  if (!c) return;
+
+  abrirModal({
+    eyebrow: 'Pipeline Comercial',
+    titulo: 'Converter em cliente',
+    subtitulo: c.titulo,
+    corpoHtml: `
+      <p class="sub" style="margin-bottom:1rem">Isso criará um cliente novo no sistema com as informações do card. Você poderá completar o cadastro depois.</p>
+      <form id="form-converter">
+        <div class="field"><label>Nome do cliente</label><input name="nome" value="${esc(c.titulo)}" required></div>
+        <div class="field"><label>Segmento</label><input name="segmento" placeholder="Ex: Saúde, Varejo..."></div>
+        <button class="btn btn-grad" type="submit" style="width:100%;margin-top:.4rem">Criar cliente →</button>
+      </form>
+    `,
+  });
+
+  document.getElementById('form-converter').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    try {
+      const { cliente } = await api('clientes', {
+        method: 'POST',
+        body: JSON.stringify({ nome: f.nome.value, segmento: f.segmento.value }),
+      });
+      await api('pipeline?id=' + cardId, { method: 'PATCH', body: JSON.stringify({ cliente_id: cliente.id }) });
+      _pipelineCards = _pipelineCards.map((c) => c.id === cardId ? { ...c, cliente_id: cliente.id, clientes: { id: cliente.id, nome: cliente.nome } } : c);
+      fecharModal();
+      renderKanban();
+      abrirPainelCard(cardId);
+      toast('Cliente criado com sucesso!');
+    } catch (err) { toast(err.message); }
+  });
+}
+
 const REDES_BRIEFING = [
   { id: 'instagram', label: 'Instagram' },
   { id: 'tiktok', label: 'TikTok' },
@@ -2349,10 +2631,23 @@ async function viewClienteDetalhe(clienteId) {
 
   document.getElementById('main').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
-      <div>
-        <div class="eyebrow">Cliente</div>
-        <h1>${esc(cliente.nome)}</h1>
-        <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+      <div style="display:flex;gap:1rem;align-items:flex-start">
+        <div class="logo-editor ${usuario.role === 'admin' ? 'editavel' : ''}" ${usuario.role === 'admin' ? `onclick="document.getElementById('input-logo-detalhe').click()" title="Trocar logo"` : ''}>
+          ${cliente.logo_url
+            ? `<img src="${esc(cliente.logo_url)}" alt="">`
+            : `<div class="logo-editor-fallback">${esc((cliente.nome || '?').slice(0, 2))}</div>`}
+          ${usuario.role === 'admin' ? `
+            <span class="avatar-cam" style="width:18px;height:18px;bottom:-3px;right:-3px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </span>
+          ` : ''}
+        </div>
+        <input type="file" id="input-logo-detalhe" accept="image/*" style="display:none">
+        <div>
+          <div class="eyebrow">Cliente</div>
+          <h1>${esc(cliente.nome)}</h1>
+          <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+        </div>
       </div>
       ${usuario.role === 'admin' ? `
         <div style="display:flex;gap:8px;flex-shrink:0">
@@ -2383,7 +2678,18 @@ async function viewClienteDetalhe(clienteId) {
     ` : ''}
   `;
 
-  if (usuario.role === 'admin') renderVinculos(vinculos);
+  if (usuario.role === 'admin') {
+    renderVinculos(vinculos);
+    document.getElementById('input-logo-detalhe').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        await enviarLogo(clienteId, file);
+        toast('Logo atualizado');
+        viewClienteDetalhe(clienteId);
+      } catch (err) { toast(err.message); }
+    });
+  }
 }
 
 function renderVinculos(vinculos) {
