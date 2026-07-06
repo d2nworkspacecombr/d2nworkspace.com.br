@@ -1992,12 +1992,10 @@ function abrirPainelCard(id) {
 
     <div class="ae-field" style="margin-bottom:1rem">
       <label>Produtos potenciais</label>
-      <div class="checks" style="margin-top:4px">
+      <div class="kp-estagio-sel" style="margin-top:6px">
         ${_pipelineProdutos.filter((p) => p.ativo).map((p) => `
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
-            <input type="checkbox" value="${esc(p.nome)}" ${prodsSelecionados.includes(p.nome) ? 'checked' : ''} onchange="salvarProdutosPipeline('${c.id}')">
-            ${esc(p.nome)}
-          </label>
+          <button class="kp-est-btn ${prodsSelecionados.includes(p.nome) ? 'active' : ''}"
+            onclick="toggleProdutoPipeline('${c.id}', '${esc(p.nome)}')">${esc(p.nome)}</button>
         `).join('')}
       </div>
     </div>
@@ -2035,9 +2033,14 @@ function abrirPainelCard(id) {
   if (!c.diagnosticos) carregarDiagnosticosExternos();
 }
 
-function salvarProdutosPipeline(id) {
-  const checks = [...document.querySelectorAll('#kanban-painel .checks input:checked')].map((i) => i.value);
-  salvarCampoCard(id, 'produtos_potenciais', checks.join(', '));
+function toggleProdutoPipeline(id, nomeProduto) {
+  const c = _pipelineCards.find((x) => x.id === id);
+  if (!c) return;
+  const atuais = (c.produtos_potenciais || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const novos = atuais.includes(nomeProduto)
+    ? atuais.filter((p) => p !== nomeProduto)
+    : [...atuais, nomeProduto];
+  salvarCampoCard(id, 'produtos_potenciais', novos.join(', '));
 }
 
 async function carregarDiagnosticosExternos() {
