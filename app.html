@@ -49,8 +49,8 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .nav-badge{margin-left:auto;font-size:9px;background:var(--teal);color:var(--navy-900);padding:2px 7px;border-radius:20px;font-weight:700;letter-spacing:.03em;display:none}
 
 /* PIPELINE — KANBAN COMERCIAL */
-.kanban-wrap{display:flex;gap:12px;overflow-x:auto;padding-bottom:1rem;align-items:flex-start}
-.kanban-col{flex-shrink:0;width:220px;background:var(--paper);border-radius:var(--r-md);padding:10px}
+.kanban-wrap{display:flex;gap:12px;padding-bottom:1rem;align-items:flex-start}
+.kanban-col{flex-shrink:0;width:210px;background:#f0f2f7;border-radius:var(--r-md);padding:10px}
 .kanban-col-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .kanban-col-titulo{font-family:'Sora',sans-serif;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
 .kanban-col-count{font-family:'Sora',sans-serif;font-size:10px;font-weight:700;background:#fff;color:var(--ink-faint);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid var(--line)}
@@ -65,9 +65,9 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .kanban-tag{display:inline-block;background:var(--paper);border:1px solid var(--line);border-radius:4px;font-size:10.5px;color:var(--ink-soft);padding:1px 6px;margin:2px 2px 0 0}
 
 /* PAINEL LATERAL DO CARD */
-.kanban-layout{display:flex;gap:0;height:100%}
-.kanban-main{flex:1;min-width:0;overflow-x:auto}
-.kanban-painel{width:340px;flex-shrink:0;border-left:1px solid var(--line);padding:1.25rem;overflow-y:auto;background:#fff;border-radius:0 var(--r-lg) var(--r-lg) 0}
+.kanban-layout{display:flex;gap:0;min-height:500px;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;overflow:hidden}
+.kanban-main{flex:1;min-width:0;overflow-x:auto;overflow-y:auto;padding:1rem}
+.kanban-painel{width:300px;min-width:300px;flex-shrink:0;border-left:1px solid var(--line);padding:1.25rem;overflow-y:auto;background:var(--paper)}
 .kanban-painel-vazio{color:var(--ink-faint);font-size:13px;text-align:center;padding-top:3rem}
 .kp-estagio-sel{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem}
 .kp-est-btn{border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-size:10.5px;font-weight:600;font-family:'Sora',sans-serif;padding:4px 10px;border-radius:20px;cursor:pointer;transition:.12s}
@@ -2075,7 +2075,23 @@ async function moverCard(id, estagio) {
 }
 
 async function excluirCard(id) {
-  if (!confirm('Excluir este prospect do pipeline?')) return;
+  const painel = document.getElementById('kanban-painel');
+  const conf = document.getElementById('kp-confirm-delete');
+  if (conf) { conf.remove(); return; }
+  const div = document.createElement('div');
+  div.id = 'kp-confirm-delete';
+  div.style.cssText = 'background:#fde8ea;border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:13px';
+  div.innerHTML = `
+    <p style="margin-bottom:8px;color:#d3455a;font-weight:600">Excluir este prospect?</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" style="flex:1;padding:6px 0;font-size:12px" onclick="document.getElementById('kp-confirm-delete').remove()">Cancelar</button>
+      <button class="btn" style="flex:1;padding:6px 0;font-size:12px;background:#d3455a" onclick="confirmarExcluirCard('${id}')">Excluir</button>
+    </div>
+  `;
+  painel.prepend(div);
+}
+
+async function confirmarExcluirCard(id) {
   try {
     await api('pipeline?id=' + id, { method: 'DELETE' });
     _pipelineCards = _pipelineCards.filter((c) => c.id !== id);
