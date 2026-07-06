@@ -61,6 +61,8 @@ body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);mi
 .kanban-card-sub{font-size:11px;color:var(--ink-faint);line-height:1.4}
 .kanban-add{width:100%;border:none;background:none;color:var(--teal-deep);font-size:12px;font-weight:600;padding:7px;border-radius:7px;cursor:pointer;text-align:left}
 .kanban-add:hover{background:rgba(34,211,211,.07)}
+.kanban-drag-over{background:rgba(34,211,211,.07);outline:2px dashed var(--teal);outline-offset:-4px}
+.kanban-tag{display:inline-block;background:var(--paper);border:1px solid var(--line);border-radius:4px;font-size:10.5px;color:var(--ink-soft);padding:1px 6px;margin:2px 2px 0 0}
 
 /* PAINEL LATERAL DO CARD */
 .kanban-layout{display:flex;gap:0;height:100%}
@@ -1874,6 +1876,8 @@ const PIPELINE_CORES = {
 
 let _pipelineCards = [];
 let _pipelineCardAtivo = null;
+let _pipelineProdutos = [];
+let _pipelineDragId = null;
 
 async function viewPipeline() {
   document.getElementById('main').innerHTML = `
@@ -1891,8 +1895,12 @@ async function viewPipeline() {
   `;
 
   try {
-    const { cards } = await api('pipeline');
+    const [{ cards }, { produtos }] = await Promise.all([
+      api('pipeline'),
+      api('produtos'),
+    ]);
     _pipelineCards = cards || [];
+    _pipelineProdutos = produtos || [];
     renderKanban();
   } catch (e) {
     document.getElementById('kanban-board').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
@@ -1904,7 +1912,10 @@ function renderKanban() {
   el.innerHTML = PIPELINE_ESTAGIOS.map((est) => {
     const cards = _pipelineCards.filter((c) => c.estagio === est.id);
     return `
-      <div class="kanban-col">
+      <div class="kanban-col" data-estagio="${est.id}"
+        ondragover="event.preventDefault();this.classList.add('kanban-drag-over')"
+        ondragleave="this.classList.remove('kanban-drag-over')"
+        ondrop="onDropKanban(event,'${est.id}')">
         <div class="kanban-col-head">
           <div class="kanban-col-titulo" style="color:${PIPELINE_CORES[est.id]}">${esc(est.label)}</div>
           <div class="kanban-col-count">${cards.length}</div>
@@ -1920,13 +1931,39 @@ function renderKanban() {
 
 function htmlKanbanCard(c) {
   const ativo = _pipelineCardAtivo === c.id;
+  const prods = (c.produtos_potenciais || '').split(',').filter(Boolean).map((s) => s.trim());
   return `
-    <div class="kanban-card ${ativo ? 'ativo' : ''}" onclick="abrirPainelCard('${c.id}')">
+    <div class="kanban-card ${ativo ? 'ativo' : ''}"
+      draggable="true"
+      ondragstart="onDragStart(event,'${c.id}')"
+      ondragend="onDragEnd(event)"
+      onclick="abrirPainelCard('${c.id}')">
       <div class="kanban-card-titulo">${esc(c.titulo)}</div>
-      ${c.produtos_potenciais ? `<div class="kanban-card-sub">${esc(c.produtos_potenciais)}</div>` : ''}
-      ${c.responsavel ? `<div class="kanban-card-sub" style="margin-top:4px">👤 ${esc(c.responsavel.nome)}</div>` : ''}
+      ${prods.length > 0 ? `<div class="kanban-card-sub" style="margin-top:4px">${prods.map((p) => `<span class="kanban-tag">${esc(p)}</span>`).join('')}</div>` : ''}
+      ${c.responsavel ? `<div class="kanban-card-sub" style="margin-top:5px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:10px;flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${esc(c.responsavel.nome)}</div>` : ''}
     </div>
   `;
+}
+
+function onDragStart(ev, id) {
+  _pipelineDragId = id;
+  ev.dataTransfer.effectAllowed = 'move';
+  ev.currentTarget.style.opacity = '0.45';
+}
+
+function onDragEnd(ev) {
+  ev.currentTarget.style.opacity = '';
+  document.querySelectorAll('.kanban-drag-over').forEach((el) => el.classList.remove('kanban-drag-over'));
+}
+
+async function onDropKanban(ev, estagio) {
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('kanban-drag-over');
+  if (!_pipelineDragId) return;
+  const c = _pipelineCards.find((x) => x.id === _pipelineDragId);
+  if (!c || c.estagio === estagio) { _pipelineDragId = null; return; }
+  await moverCard(_pipelineDragId, estagio);
+  _pipelineDragId = null;
 }
 
 function abrirPainelCard(id) {
@@ -1936,67 +1973,71 @@ function abrirPainelCard(id) {
   const c = _pipelineCards.find((x) => x.id === id);
   if (!c) return;
 
-  const estAtual = PIPELINE_ESTAGIOS.findIndex((e) => e.id === c.estagio);
+  const prodsSelecionados = (c.produtos_potenciais || '').split(',').map((s) => s.trim()).filter(Boolean);
+  const corEstagio = PIPELINE_CORES[c.estagio];
+  const labelEstagio = PIPELINE_ESTAGIOS.find((e) => e.id === c.estagio)?.label || '';
 
   document.getElementById('kanban-painel').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem">
-      <div style="font-family:'Sora',sans-serif;font-size:11px;color:${PIPELINE_CORES[c.estagio]};font-weight:700;text-transform:uppercase;letter-spacing:.04em">
-        ${PIPELINE_ESTAGIOS.find((e) => e.id === c.estagio)?.label || ''}
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span class="pill" style="background:${corEstagio}22;color:${corEstagio};border:1px solid ${corEstagio}44;font-size:10.5px">${esc(labelEstagio)}</span>
       <button class="ae-del" onclick="excluirCard('${c.id}')">✕</button>
     </div>
 
-    <div class="ae-field" style="margin-bottom:.9rem">
-      <label>Nome do prospect</label>
-      <input id="kp-titulo" value="${esc(c.titulo)}" onchange="salvarCampoCard('${c.id}', 'titulo', this.value)">
-    </div>
+    <input class="tf-titulo-input" style="font-size:17px;margin-bottom:1.1rem;width:100%" value="${esc(c.titulo)}" onchange="salvarCampoCard('${c.id}','titulo',this.value)">
 
-    <div class="ae-field" style="margin-bottom:.9rem">
+    <div class="ae-field">
       <label>Dossiê Comercial</label>
-      <textarea id="kp-dossie" rows="5" onchange="salvarCampoCard('${c.id}', 'dossie', this.value)">${esc(c.dossie || '')}</textarea>
+      <textarea rows="5" onchange="salvarCampoCard('${c.id}','dossie',this.value)">${esc(c.dossie || '')}</textarea>
     </div>
 
-    <div class="ae-field" style="margin-bottom:.9rem">
+    <div class="ae-field" style="margin-bottom:1rem">
       <label>Produtos potenciais</label>
-      <input id="kp-produtos" value="${esc(c.produtos_potenciais || '')}" placeholder="Ex: Assessoria Estratégica, Social Media" onchange="salvarCampoCard('${c.id}', 'produtos_potenciais', this.value)">
+      <div class="checks" style="margin-top:4px">
+        ${_pipelineProdutos.filter((p) => p.ativo).map((p) => `
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+            <input type="checkbox" value="${esc(p.nome)}" ${prodsSelecionados.includes(p.nome) ? 'checked' : ''} onchange="salvarProdutosPipeline('${c.id}')">
+            ${esc(p.nome)}
+          </label>
+        `).join('')}
+      </div>
     </div>
 
-    ${c.diagnosticos ? `
-      <div class="ae-card" style="margin-bottom:.9rem;padding:.75rem 1rem">
-        <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px">Diagnóstico vinculado</div>
-        <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="ae-field" style="margin-bottom:1rem">
+      <label>Diagnóstico</label>
+      ${c.diagnosticos ? `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
           <span class="pill">${c.diagnosticos.status === 'concluido' ? 'Concluído' : 'Em andamento'}</span>
           <button class="btn btn-outline" style="padding:5px 10px;font-size:11.5px" onclick="location.hash='#/diagnostico/${c.diagnostico_id}'">Ver diagnóstico</button>
         </div>
-      </div>
-    ` : `
-      <div class="ae-field" style="margin-bottom:.9rem">
-        <label>Vincular diagnóstico externo</label>
-        <select onchange="salvarCampoCard('${c.id}', 'diagnostico_id', this.value || null)" id="kp-diag">
+      ` : `
+        <select id="kp-diag" onchange="salvarCampoCard('${c.id}','diagnostico_id',this.value||null)">
           <option value="">— Nenhum —</option>
         </select>
-      </div>
-    `}
+      `}
+    </div>
 
-    <div style="margin-bottom:1rem">
-      <label style="display:block;font-family:'Sora',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px">Mover para</label>
-      <div class="kp-estagio-sel">
+    <div class="ae-field" style="margin-bottom:1.2rem">
+      <label>Etapa</label>
+      <div class="kp-estagio-sel" style="margin-top:6px">
         ${PIPELINE_ESTAGIOS.map((e) => `
-          <button class="kp-est-btn ${c.estagio === e.id ? 'active' : ''}" onclick="moverCard('${c.id}', '${e.id}')">${esc(e.label)}</button>
+          <button class="kp-est-btn ${c.estagio === e.id ? 'active' : ''}" onclick="moverCard('${c.id}','${e.id}')">${esc(e.label)}</button>
         `).join('')}
       </div>
     </div>
 
     ${c.estagio === 'onboarding' && !c.cliente_id ? `
-      <button class="btn btn-grad" style="width:100%;margin-top:.4rem" onclick="converterEmCliente('${c.id}')">
-        Converter em Cliente →
-      </button>
+      <button class="btn btn-grad" style="width:100%" onclick="converterEmCliente('${c.id}')">Converter em Cliente →</button>
     ` : c.cliente_id ? `
-      <div class="pill" style="text-align:center;padding:8px">Cliente criado no sistema</div>
+      <div class="card" style="text-align:center;padding:10px;color:var(--teal-deep);font-size:13px;font-weight:600">✓ Cliente criado no sistema</div>
     ` : ''}
   `;
 
   if (!c.diagnosticos) carregarDiagnosticosExternos();
+}
+
+function salvarProdutosPipeline(id) {
+  const checks = [...document.querySelectorAll('#kanban-painel .checks input:checked')].map((i) => i.value);
+  salvarCampoCard(id, 'produtos_potenciais', checks.join(', '));
 }
 
 async function carregarDiagnosticosExternos() {
@@ -2048,19 +2089,17 @@ function novoCard(estagio) {
     titulo: 'Novo prospect',
     corpoHtml: `
       <form id="form-pipeline">
-        <div class="field"><label>Nome do prospect / empresa</label><input name="titulo" required></div>
-        <div class="field"><label>Produtos potenciais</label><input name="produtos" placeholder="Ex: Assessoria Estratégica"></div>
+        <div class="field"><label>Nome do prospect / empresa</label><input name="titulo" required autofocus></div>
         <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Criar card</button>
       </form>
     `,
   });
   document.getElementById('form-pipeline').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const f = e.target;
     try {
       const { card } = await api('pipeline', {
         method: 'POST',
-        body: JSON.stringify({ titulo: f.titulo.value, estagio, produtos_potenciais: f.produtos.value || null }),
+        body: JSON.stringify({ titulo: e.target.titulo.value, estagio }),
       });
       _pipelineCards.push(card);
       fecharModal();
@@ -2073,13 +2112,12 @@ function novoCard(estagio) {
 async function converterEmCliente(cardId) {
   const c = _pipelineCards.find((x) => x.id === cardId);
   if (!c) return;
-
   abrirModal({
     eyebrow: 'Pipeline Comercial',
     titulo: 'Converter em cliente',
     subtitulo: c.titulo,
     corpoHtml: `
-      <p class="sub" style="margin-bottom:1rem">Isso criará um cliente novo no sistema com as informações do card. Você poderá completar o cadastro depois.</p>
+      <p class="sub" style="margin-bottom:1rem">Criará um cliente novo no sistema. Você poderá completar o cadastro depois.</p>
       <form id="form-converter">
         <div class="field"><label>Nome do cliente</label><input name="nome" value="${esc(c.titulo)}" required></div>
         <div class="field"><label>Segmento</label><input name="segmento" placeholder="Ex: Saúde, Varejo..."></div>
@@ -2087,7 +2125,6 @@ async function converterEmCliente(cardId) {
       </form>
     `,
   });
-
   document.getElementById('form-converter').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.target;
