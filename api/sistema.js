@@ -18,6 +18,7 @@ const ROTAS = {
   "upload-logo": () => require("../lib/upload-logo"),
   "upload-avatar": () => require("../lib/upload-avatar"),
   "briefing": () => require("../lib/briefing"),
+  "pipeline": () => require("../lib/pipeline"),
   "briefing-arquivos": () => require("../lib/briefing-arquivos"),
   "agenda": () => require("../lib/agenda"),
   "tarefas": () => require("../lib/tarefas"),
