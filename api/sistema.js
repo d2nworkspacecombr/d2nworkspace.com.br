@@ -20,6 +20,7 @@ const ROTAS = {
   "briefing": () => require("../lib/briefing"),
   "pipeline": () => require("../lib/pipeline"),
   "briefing-arquivos": () => require("../lib/briefing-arquivos"),
+  "ficha-cliente": () => require("../lib/ficha-cliente"),
   "agenda": () => require("../lib/agenda"),
   "tarefas": () => require("../lib/tarefas"),
   "projetos": () => require("../lib/projetos"),
