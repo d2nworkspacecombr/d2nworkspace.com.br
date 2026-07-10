@@ -848,6 +848,7 @@ const NAV_GRUPOS = [
     titulo: 'Módulos',
     itens: [
       { hash: '#/pipeline', label: 'Pipeline Comercial', icone: '<rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="3" width="4" height="13" rx="1"/><rect x="17" y="3" width="4" height="9" rx="1"/>' },
+      { hash: '#/briefing', label: 'Briefing do Cliente', icone: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/>' },
       { hash: '#/diagnostico', label: 'Diagnóstico', icone: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
       { hash: '#/assessoria', label: 'Assessoria', icone: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>' },
       { hash: '#/social-media', label: 'Social Media', icone: '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>', em_breve: true },
@@ -910,6 +911,8 @@ function rotear() {
   if (partes[0] === 'colaboradores') return viewColaboradoresLista();
   if (partes[0] === 'produtos') return viewProdutosLista();
   if (partes[0] === 'pipeline') return viewPipeline();
+  if (partes[0] === 'briefing' && partes[1]) return viewBriefingDetalhe(partes[1]);
+  if (partes[0] === 'briefing') return viewBriefingLista();
   if (partes[0] === 'diagnostico' && partes[1]) return viewDiagnosticoDetalhe(partes[1]);
   if (partes[0] === 'diagnostico') return viewDiagnosticoLista();
   if (partes[0] === 'agenda') return viewAgendaLista();
@@ -2174,38 +2177,28 @@ const REDES_BRIEFING = [
 let _briefingClientesCache = [];
 let _briefingAtual = null;
 let _briefingSaveTimeout = null;
+let _fichaAtual = null;
+let _fichaSaveTimeout = null;
+let _bfArquivos = [];
 
+// ─── LISTA ───────────────────────────────────────────────────────────────────
 async function viewBriefingLista() {
   document.getElementById('main').innerHTML = `
-    <div class="eyebrow">Negócios</div>
-    <h1>Briefing do cliente</h1>
-    <p class="sub" style="margin:.4rem 0 1.1rem;max-width:520px">
-      Ficha comercial do cliente — acesso livre para toda a equipe, independente de vínculo.
-    </p>
+    <div class="eyebrow">Módulos</div>
+    <h1>Briefing do Cliente</h1>
+    <p class="sub" style="margin:.4rem 0 1.1rem;max-width:520px">Ficha comercial e banco de informações de cada cliente.</p>
     ${htmlBusca('busca-briefing', 'Buscar cliente...')}
     <div id="grade-briefing" style="margin-top:1.1rem">${htmlCarregando()}</div>
   `;
-
-  if (_cacheListas.briefing) {
-    _briefingClientesCache = _cacheListas.briefing;
-    renderGradeBriefing(_briefingClientesCache);
-    ligarBusca('busca-briefing', (termo) => {
-      renderGradeBriefing(_briefingClientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
-    });
-  }
-
   try {
     const { clientes } = await api('briefing');
     _briefingClientesCache = clientes || [];
-    _cacheListas.briefing = _briefingClientesCache;
     renderGradeBriefing(_briefingClientesCache);
     ligarBusca('busca-briefing', (termo) => {
       renderGradeBriefing(_briefingClientesCache.filter((c) => c.nome.toLowerCase().includes(termo)));
     });
   } catch (e) {
-    if (!_cacheListas.briefing) {
-      document.getElementById('grade-briefing').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
-    }
+    document.getElementById('grade-briefing').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
   }
 }
 
@@ -2229,9 +2222,7 @@ function renderGradeBriefing(clientes) {
             </div>
           </div>
           <div class="rodape-card">
-            <span class="pill" style="${c.briefing_preenchido ? '' : 'opacity:.5'}">
-              ${c.briefing_preenchido ? 'Preenchido' : 'Pendente'}
-            </span>
+            <span class="pill" style="${c.briefing_preenchido ? '' : 'opacity:.5'}">${c.briefing_preenchido ? 'Preenchido' : 'Pendente'}</span>
           </div>
         </div>
       `).join('')}
@@ -2239,76 +2230,72 @@ function renderGradeBriefing(clientes) {
   `;
 }
 
-let _bfArquivos = [];
-
+// ─── DETALHE (editor em 4 abas) ──────────────────────────────────────────────
 async function viewBriefingDetalhe(clienteId) {
-  document.getElementById('main').innerHTML = `${htmlCarregando()}`;
+  document.getElementById('main').innerHTML = htmlCarregando();
 
-  const [clienteResultado, briefingResultado] = await Promise.allSettled([
+  const [clienteRes, briefingRes, fichaRes] = await Promise.allSettled([
     api('clientes?id=' + clienteId),
     api('briefing?cliente_id=' + clienteId),
+    api('ficha-cliente?cliente_id=' + clienteId),
   ]);
 
-  if (clienteResultado.status === 'rejected') {
-    document.getElementById('main').innerHTML = `<p class="empty">${esc(clienteResultado.reason.message)}</p>`;
+  if (clienteRes.status === 'rejected') {
+    document.getElementById('main').innerHTML = `<p class="empty">${esc(clienteRes.reason.message)}</p>`;
     return;
   }
 
-  const cliente = clienteResultado.value.cliente;
-  const briefing = briefingResultado.status === 'fulfilled' ? briefingResultado.value.briefing : null;
+  const cliente = clienteRes.value.cliente;
+  const briefing = briefingRes.status === 'fulfilled' ? briefingRes.value.briefing : null;
+  const fichaDados = fichaRes.status === 'fulfilled' ? fichaRes.value.dados : null;
 
   _briefingAtual = briefing || { cliente_id: clienteId, descritivo: '', redes_ativas: [] };
-  const preenchido = !!(_briefingAtual.descritivo || (_briefingAtual.redes_ativas || []).length);
+  _fichaAtual = fichaDados || {};
 
   document.getElementById('main').innerHTML = `
     <div class="ae-shell">
       <nav class="ae-side">
         <div class="ae-side-name">${esc(cliente.nome)}</div>
-        <div class="ae-side-sub">Briefing do cliente</div>
+        <div class="ae-side-sub">Briefing do Cliente</div>
         <div class="ae-nav" id="bf-nav">
-          <button class="active" data-sec="geral" onclick="bfGoSec('geral', this)">Briefing Geral</button>
-          <button data-sec="dossie" onclick="bfGoSec('dossie', this)">Dossiê Comercial</button>
-          <button data-sec="senhas" onclick="bfGoSec('senhas', this)">Senhas</button>
-          <button data-sec="arquivos" onclick="bfGoSec('arquivos', this)">Arquivos</button>
+          <button class="active" onclick="bfGoSec('geral',this)">Geral</button>
+          <button onclick="bfGoSec('ficha',this)">Ficha do Cliente</button>
+          <button onclick="bfGoSec('redes',this)">Redes Sociais</button>
+          <button onclick="bfGoSec('arquivos',this)">Arquivos</button>
         </div>
         <div class="ae-side-foot">
           <div class="ae-save" id="bf-save-status">Salvo automaticamente</div>
-          <button class="ae-back" onclick="location.hash='#/briefing'">← Voltar para Briefing</button>
+          <button class="ae-back" onclick="location.hash='#/briefing'">← Voltar</button>
         </div>
       </nav>
 
       <div class="ae-main">
-        <!-- BRIEFING GERAL -->
-        <div id="bf-sec-geral" class="ae-section active">
-          <div class="eyebrow">Briefing do cliente</div>
-          <h1>Briefing Geral</h1>
-          <div class="ae-card" style="margin-top:1rem">
-            <div class="ae-card-title">Visão geral</div>
-            <div class="ae-row c2">
-              <div class="ae-field"><label>Cliente</label><div style="padding:9px 0;font-size:14px;color:var(--ink)">${esc(cliente.nome)}</div></div>
-              <div class="ae-field"><label>Segmento</label><div style="padding:9px 0;font-size:14px;color:var(--ink)">${esc(cliente.segmento) || '—'}</div></div>
-            </div>
-            <span class="pill" style="${preenchido ? '' : 'opacity:.55'}">${preenchido ? 'Briefing preenchido' : 'Briefing pendente'}</span>
-          </div>
-          <p class="ae-tip" style="margin-top:1rem">Use as abas ao lado para preencher o dossiê comercial, as senhas das redes sociais e anexar arquivos do cliente.</p>
-        </div>
 
-        <!-- DOSSIÊ COMERCIAL -->
-        <div id="bf-sec-dossie" class="ae-section">
-          <div class="eyebrow">Briefing do cliente</div>
+        <!-- ABA: GERAL -->
+        <div id="bf-sec-geral" class="ae-section active">
+          <div class="eyebrow">Briefing do Cliente</div>
           <h1>Dossiê Comercial</h1>
           <div class="ae-card" style="margin-top:1rem">
-            <div class="ae-card-title">Descritivo</div>
-            <div class="ae-field"><textarea id="bf-descritivo" rows="12" oninput="briefingAutosave()">${esc(_briefingAtual.descritivo || '')}</textarea></div>
+            <div class="ae-field">
+              <label>Descritivo geral do cliente</label>
+              <textarea id="bf-descritivo" rows="10" oninput="briefingAutosave()">${esc(_briefingAtual.descritivo || '')}</textarea>
+            </div>
           </div>
         </div>
 
-        <!-- SENHAS -->
-        <div id="bf-sec-senhas" class="ae-section">
-          <div class="eyebrow">Briefing do cliente</div>
-          <h1>Senhas</h1>
+        <!-- ABA: FICHA DO CLIENTE -->
+        <div id="bf-sec-ficha" class="ae-section">
+          <div class="eyebrow">Briefing do Cliente</div>
+          <h1>Ficha do Cliente</h1>
+          ${bfSecaoFicha()}
+        </div>
+
+        <!-- ABA: REDES SOCIAIS -->
+        <div id="bf-sec-redes" class="ae-section">
+          <div class="eyebrow">Briefing do Cliente</div>
+          <h1>Redes Sociais</h1>
           <div class="ae-card" style="margin-top:1rem">
-            <div class="ae-card-title">Redes sociais utilizadas</div>
+            <div class="ae-card-title">Redes utilizadas</div>
             <div class="checks" style="margin-bottom:1rem">
               ${REDES_BRIEFING.map((r) => `
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -2321,21 +2308,23 @@ async function viewBriefingDetalhe(clienteId) {
           </div>
         </div>
 
-        <!-- ARQUIVOS -->
+        <!-- ABA: ARQUIVOS -->
         <div id="bf-sec-arquivos" class="ae-section">
-          <div class="eyebrow">Briefing do cliente</div>
+          <div class="eyebrow">Briefing do Cliente</div>
           <h1>Arquivos</h1>
           <div class="ae-card" style="margin-top:1rem">
             <div class="ae-card-title">Anexos do cliente</div>
             <input type="file" id="bf-input-arquivo" style="margin-bottom:1rem">
-            <div id="bf-lista-arquivos"><p class="sub" style="font-size:12.5px">Carregando arquivos...</p></div>
+            <div id="bf-lista-arquivos">${htmlCarregando()}</div>
           </div>
         </div>
+
       </div>
     </div>
   `;
 
   renderCamposRedesBriefing();
+  fichaCarregarCampos();
   carregarArquivosBriefing(clienteId);
   document.getElementById('bf-input-arquivo').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -2344,25 +2333,146 @@ async function viewBriefingDetalhe(clienteId) {
 }
 
 function bfGoSec(name, btn) {
-  document.querySelectorAll('#bf-sec-geral, #bf-sec-dossie, #bf-sec-senhas, #bf-sec-arquivos').forEach((s) => s.classList.remove('active'));
+  document.querySelectorAll('#bf-sec-geral, #bf-sec-ficha, #bf-sec-redes, #bf-sec-arquivos').forEach((s) => s.classList.remove('active'));
   document.querySelectorAll('#bf-nav button').forEach((b) => b.classList.remove('active'));
   document.getElementById('bf-sec-' + name).classList.add('active');
   btn.classList.add('active');
 }
 
+// ─── FICHA DO CLIENTE (5 seções do onboarding) ───────────────────────────────
+const BF_FICHA_SECOES = [
+  {
+    id: 'identificacao', titulo: 'Identificação', sub: 'Dados básicos do cliente',
+    campos: [
+      { id: 'nome', label: 'Nome completo', tipo: 'text' },
+      { id: 'apelido', label: 'Como prefere ser chamado', tipo: 'text' },
+      { id: 'email', label: 'E-mail', tipo: 'text' },
+      { id: 'whatsapp', label: 'WhatsApp', tipo: 'text' },
+      { id: 'marca', label: 'Nome da marca / empresa', tipo: 'text' },
+      { id: 'segmento', label: 'Segmento / nicho', tipo: 'text' },
+      { id: 'site', label: 'Site', tipo: 'text' },
+      { id: 'redes_arroba', label: 'Redes sociais (@)', tipo: 'text' },
+      { id: 'cargo', label: 'Cargo / função na empresa', tipo: 'text' },
+      { id: 'colaboradores', label: 'Número de colaboradores', tipo: 'text' },
+    ],
+  },
+  {
+    id: 'marca', titulo: 'Marca e Trajetória', sub: 'História e identidade da marca',
+    campos: [
+      { id: 'descricao_marca', label: 'Descrição da marca', tipo: 'textarea' },
+      { id: 'diferencial', label: 'Diferencial competitivo', tipo: 'textarea' },
+      { id: 'publico_alvo', label: 'Público-alvo', tipo: 'textarea' },
+      { id: 'produtos_servicos', label: 'Produtos / serviços oferecidos', tipo: 'textarea' },
+      { id: 'evitar', label: 'O que evitar na comunicação', tipo: 'textarea' },
+    ],
+  },
+  {
+    id: 'objetivos', titulo: 'Objetivos', sub: 'Momento atual e metas',
+    campos: [
+      { id: 'momento_atual', label: 'Momento atual do negócio', tipo: 'textarea' },
+      { id: 'desafios', label: 'Desafios do último ano', tipo: 'textarea' },
+      { id: 'conquistas', label: 'Conquistas recentes', tipo: 'textarea' },
+      { id: 'objetivos_2026', label: 'Objetivos para 2026', tipo: 'textarea' },
+      { id: 'metas_2026', label: 'Metas específicas 2026', tipo: 'textarea' },
+      { id: 'datas_projetos', label: 'Datas / projetos importantes', tipo: 'textarea' },
+    ],
+  },
+  {
+    id: 'visao', titulo: 'Visão e Tom', sub: 'Comunicação e visão de futuro',
+    campos: [
+      { id: 'tom_comunicacao', label: 'Tom de comunicação', tipo: 'text' },
+      { id: 'referencias', label: 'Referências de marcas / pessoas', tipo: 'textarea' },
+      { id: 'identidade_visual', label: 'Identidade visual', tipo: 'textarea' },
+      { id: 'visao_2_anos', label: 'Onde quer estar em 2 anos', tipo: 'textarea' },
+      { id: 'visao_5_anos', label: 'Onde quer estar em 5 anos', tipo: 'textarea' },
+      { id: 'construir_agora', label: 'O que construir agora', tipo: 'textarea' },
+      { id: 'o_que_trava', label: 'O que trava o crescimento', tipo: 'textarea' },
+    ],
+  },
+  {
+    id: 'expectativas', titulo: 'Expectativas e Histórico', sub: 'O que espera da parceria com a D2N',
+    campos: [
+      { id: 'nao_pode_faltar', label: 'O que não pode faltar', tipo: 'textarea' },
+      { id: 'primeiros_30_dias', label: 'Expectativa dos primeiros 30 dias', tipo: 'textarea' },
+      { id: 'medida_sucesso', label: 'Como mede o sucesso', tipo: 'text' },
+      { id: 'tempo_semanal', label: 'Tempo disponível por semana', tipo: 'text' },
+      { id: 'experiencia_anterior', label: 'Experiência anterior com consultorias', tipo: 'textarea' },
+      { id: 'o_que_nao_funcionou', label: 'O que não funcionou antes', tipo: 'textarea' },
+      { id: 'mensagem_equipe', label: 'Mensagem para a equipe D2N', tipo: 'textarea' },
+    ],
+  },
+];
+
+function bfSecaoFicha() {
+  return BF_FICHA_SECOES.map((sec, i) => `
+    <div class="ae-card" style="margin-top:1rem">
+      <div class="ae-card-title">
+        <span style="background:var(--teal);color:var(--navy-900);font-size:10px;font-weight:700;width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;margin-right:8px">${i + 1}</span>
+        ${esc(sec.titulo)}
+        <span class="ae-side-sub" style="margin-left:8px;font-weight:400">${esc(sec.sub)}</span>
+      </div>
+      <div class="ae-row" style="${sec.campos.length > 3 ? 'display:grid;grid-template-columns:1fr 1fr;gap:.75rem' : ''}">
+        ${sec.campos.map((campo) => `
+          <div class="ae-field">
+            <label>${esc(campo.label)}</label>
+            ${campo.tipo === 'textarea'
+              ? `<textarea id="fc-${campo.id}" rows="3" oninput="fichaAutosave()"></textarea>`
+              : `<input type="text" id="fc-${campo.id}" oninput="fichaAutosave()">`}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function fichaCarregarCampos() {
+  BF_FICHA_SECOES.forEach((sec) => {
+    sec.campos.forEach((campo) => {
+      const el = document.getElementById('fc-' + campo.id);
+      if (el) el.value = _fichaAtual[campo.id] || '';
+    });
+  });
+}
+
+function fichaAutosave() {
+  clearTimeout(_fichaSaveTimeout);
+  _fichaSaveTimeout = setTimeout(salvarFicha, 900);
+}
+
+async function salvarFicha() {
+  if (!_briefingAtual?.cliente_id) return;
+  const dados = {};
+  BF_FICHA_SECOES.forEach((sec) => {
+    sec.campos.forEach((campo) => {
+      const el = document.getElementById('fc-' + campo.id);
+      if (el) dados[campo.id] = el.value;
+    });
+  });
+  _fichaAtual = dados;
+  try {
+    await api('ficha-cliente', {
+      method: 'POST',
+      body: JSON.stringify({ cliente_id: _briefingAtual.cliente_id, dados }),
+    });
+    bfMostrarSalvo();
+  } catch (e) { toast(e.message); }
+}
+
+// ─── REDES SOCIAIS ────────────────────────────────────────────────────────────
 function renderCamposRedesBriefing() {
   const el = document.getElementById('bf-campos-redes');
-  const ativas = _briefingAtual.redes_ativas;
+  if (!el) return;
+  const ativas = _briefingAtual.redes_ativas || [];
   el.innerHTML = REDES_BRIEFING.filter((r) => ativas.includes(r.id)).map((r) => `
-    <div class="grid2" style="margin-bottom:.6rem">
-      <div class="field" style="margin-bottom:0">
+    <div class="ae-row" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.6rem">
+      <div class="ae-field" style="margin-bottom:0">
         <label>${r.label} — e-mail</label>
         <input id="bf-${r.id}-email" value="${esc(_briefingAtual[r.id + '_email'] || '')}" oninput="briefingAutosave()">
       </div>
-      <div class="field" style="margin-bottom:0;position:relative">
+      <div class="ae-field" style="margin-bottom:0;position:relative">
         <label>${r.label} — senha</label>
         <input id="bf-${r.id}-senha" type="password" value="${esc(_briefingAtual[r.id + '_senha'] || '')}" oninput="briefingAutosave()" style="padding-right:38px">
-        <button type="button" onclick="toggleOlhinho('bf-${r.id}-senha')" title="Mostrar/ocultar senha"
+        <button type="button" onclick="toggleOlhinho('bf-${r.id}-senha')"
           style="position:absolute;right:6px;top:29px;background:none;border:none;cursor:pointer;color:var(--ink-faint);padding:4px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;display:block">
             <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
@@ -2370,12 +2480,12 @@ function renderCamposRedesBriefing() {
         </button>
       </div>
     </div>
-  `).join('') || `<p class="sub" style="font-size:12.5px">Nenhuma rede social marcada como ativa.</p>`;
+  `).join('') || `<p class="sub" style="font-size:12.5px">Nenhuma rede marcada como ativa.</p>`;
 }
 
 function briefingToggleRede(redeId) {
   const checked = document.getElementById('bf-rede-' + redeId).checked;
-  const ativas = new Set(_briefingAtual.redes_ativas);
+  const ativas = new Set(_briefingAtual.redes_ativas || []);
   if (checked) ativas.add(redeId); else ativas.delete(redeId);
   _briefingAtual.redes_ativas = [...ativas];
   renderCamposRedesBriefing();
@@ -2384,41 +2494,42 @@ function briefingToggleRede(redeId) {
 
 function toggleOlhinho(inputId) {
   const input = document.getElementById(inputId);
-  input.type = input.type === 'password' ? 'text' : 'password';
+  if (input) input.type = input.type === 'password' ? 'text' : 'password';
 }
 
 function briefingAutosave() {
   clearTimeout(_briefingSaveTimeout);
-  document.getElementById('bf-save-status').textContent = '';
   _briefingSaveTimeout = setTimeout(salvarBriefing, 900);
+}
+
+function bfMostrarSalvo() {
+  const status = document.getElementById('bf-save-status');
+  if (status) {
+    status.textContent = 'Salvo';
+    status.style.opacity = '1';
+    setTimeout(() => { status.style.opacity = '0'; }, 1500);
+  }
 }
 
 async function salvarBriefing() {
   const d = _briefingAtual;
-  d.descritivo = document.getElementById('bf-descritivo').value;
+  const desc = document.getElementById('bf-descritivo');
+  if (desc) d.descritivo = desc.value;
   REDES_BRIEFING.forEach((r) => {
-    const campoEmail = document.getElementById('bf-' + r.id + '-email');
-    const campoSenha = document.getElementById('bf-' + r.id + '-senha');
-    if (d.redes_ativas.includes(r.id)) {
-      d[r.id + '_email'] = campoEmail ? campoEmail.value : '';
-      d[r.id + '_senha'] = campoSenha ? campoSenha.value : '';
+    if ((d.redes_ativas || []).includes(r.id)) {
+      const e = document.getElementById('bf-' + r.id + '-email');
+      const s = document.getElementById('bf-' + r.id + '-senha');
+      if (e) d[r.id + '_email'] = e.value;
+      if (s) d[r.id + '_senha'] = s.value;
     }
   });
-
   try {
     await api('briefing', { method: 'POST', body: JSON.stringify(d) });
-    const status = document.getElementById('bf-save-status');
-    if (status) {
-      status.textContent = 'Salvo';
-      status.style.opacity = '1';
-      setTimeout(() => { status.style.opacity = '0'; }, 1500);
-    }
+    bfMostrarSalvo();
   } catch (e) { toast(e.message); }
 }
 
-// ============================================================================
-// BRIEFING — ARQUIVOS (upload, listagem, remoção)
-// ============================================================================
+// ─── ARQUIVOS ─────────────────────────────────────────────────────────────────
 async function carregarArquivosBriefing(clienteId) {
   try {
     const { arquivos } = await api('briefing-arquivos?cliente_id=' + clienteId);
@@ -2440,7 +2551,7 @@ function renderArquivosBriefing(clienteId) {
   el.innerHTML = _bfArquivos.map((a) => `
     <div class="ae-sub-item">
       <a class="link" href="${esc(a.url)}" target="_blank" style="flex:1;font-size:13.5px">${esc(a.nome.replace(/^\d+_/, ''))}</a>
-      <button class="ae-del" title="Remover" onclick="removerArquivoBriefing('${clienteId}', '${esc(a.nome)}')">✕</button>
+      <button class="ae-del" title="Remover" onclick="removerArquivoBriefing('${clienteId}','${esc(a.nome)}')">✕</button>
     </div>
   `).join('');
 }
@@ -2450,10 +2561,7 @@ async function enviarArquivoBriefing(clienteId, file) {
   reader.onload = async () => {
     const base64 = reader.result.split(',')[1];
     try {
-      await api('briefing-arquivos', {
-        method: 'POST',
-        body: JSON.stringify({ cliente_id: clienteId, filename: file.name, base64 }),
-      });
+      await api('briefing-arquivos', { method: 'POST', body: JSON.stringify({ cliente_id: clienteId, filename: file.name, base64 }) });
       toast('Arquivo enviado');
       carregarArquivosBriefing(clienteId);
     } catch (e) { toast(e.message); }
