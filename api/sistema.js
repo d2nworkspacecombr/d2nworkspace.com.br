@@ -40,6 +40,10 @@ module.exports = async (req, res) => {
     const handler = carregarModulo();
     return await handler(req, res);
   } catch (err) {
+    // Registra o erro completo nos logs do Vercel — sem isso, quando algo
+    // quebra em produção só sobra a mensagem curta que o usuário vê, sem
+    // rastro nenhum pra investigar depois.
+    console.error("Erro inesperado no recurso '" + recurso + "':", err);
     return enviarErro(res, 500, "Erro inesperado no servidor: " + (err.message || String(err)));
   }
 };
