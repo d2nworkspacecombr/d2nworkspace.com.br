@@ -300,6 +300,9 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .ae-shell{display:flex;gap:1.5rem;align-items:flex-start}
 .ae-side{width:222px;flex-shrink:0;background:var(--grad-navy);border-radius:var(--r-lg);padding:1.25rem 1rem;position:sticky;top:1rem;box-shadow:var(--shadow-md)}
 .ae-side-name{font-family:'Sora',sans-serif;font-weight:700;font-size:14px;color:#fff;margin-bottom:2px;word-break:break-word}
+.ae-side-head{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.ae-side-logo{width:34px;height:34px;border-radius:9px;object-fit:cover;flex-shrink:0;background:rgba(255,255,255,.1)}
+.ae-side-logo-fallback{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:12px;font-weight:700}
 .ae-side-sub{font-size:11px;color:rgba(255,255,255,.55);margin-bottom:1.1rem}
 .ae-nav{display:flex;flex-direction:column;gap:4px;margin-bottom:1.25rem}
 .ae-nav button{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;border:none;background:none;color:rgba(255,255,255,.7);font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;text-align:left;cursor:pointer;transition:.15s;width:100%}
@@ -371,6 +374,11 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .ae-progress-track{height:7px;border-radius:5px;background:var(--line);overflow:hidden;position:relative;cursor:pointer}
 .ae-progress-fill{height:100%;border-radius:5px;transition:width .15s}
 .ae-okr-avg{font-family:'Sora',sans-serif;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:auto}
+.ae-okr-titlebar{display:flex;align-items:center;gap:10px;margin-bottom:.7rem}
+.ae-okr-badge{font-family:'Sora',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);background:var(--paper);border:1px solid var(--line);padding:3px 9px;border-radius:20px;flex-shrink:0}
+.ae-oo{width:100%;background:none!important;border:none!important;border-bottom:1.5px solid var(--line)!important;border-radius:0!important;padding:4px 0 10px!important;font-family:'Sora',sans-serif!important;font-size:16px!important;font-weight:600!important;color:var(--navy-700)!important;resize:none!important;min-height:auto!important}
+.ae-oo:focus{border-bottom-color:var(--teal)!important}
+.ae-oo::placeholder{font-weight:400;color:var(--ink-faint)}
 .ae-summary-banner{display:flex;align-items:center;gap:18px;background:var(--navy-700);border-radius:var(--r-md);padding:1rem 1.4rem;margin-bottom:1.1rem;color:#fff}
 .ae-summary-num{font-family:'Sora',sans-serif;font-size:26px;font-weight:700}
 .ae-summary-label{font-size:11.5px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.04em}
@@ -454,11 +462,16 @@ tr.linha:hover td{background:var(--paper);cursor:pointer}
 .rkr-p{font-family:monospace;font-size:11.5px;font-weight:700;width:30px;text-align:right;flex-shrink:0}
 .rback{background:var(--navy-900);min-height:120px;display:flex;align-items:center;justify-content:center;padding:26px}
 @media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
   body *{visibility:hidden}
   #ae-preview, #ae-preview *{visibility:visible}
   #ae-preview{position:absolute;inset:0;background:#fff;padding:0}
   .ae-preview-close{display:none}
   .ae-preview-inner{width:100%}
+}
+@page{
+  size:A4;
+  margin:14mm 12mm;
 }
 @media(max-width:980px){
   .ae-shell{flex-direction:column}
@@ -2626,11 +2639,16 @@ function renderTabelaClientes(clientes) {
   }
   el.innerHTML = `
     <table>
-      <thead><tr><th>Cliente</th><th>Segmento</th><th>Produtos</th><th>Status</th></tr></thead>
+      <thead><tr><th></th><th>Cliente</th><th>Segmento</th><th>Produtos</th><th>Status</th></tr></thead>
       <tbody>
         ${clientes.map((c) => `
-          <tr class="linha" onclick="location.hash='#/clientes/${c.id}'">
-            <td><a class="link" href="#/clientes/${c.id}">${esc(c.nome)}</a></td>
+          <tr class="linha" onclick="abrirModalEditarCliente('${c.id}')">
+            <td style="width:40px">
+              ${c.logo_url
+                ? `<img src="${esc(c.logo_url)}" alt="" style="width:28px;height:28px;border-radius:7px;object-fit:cover;display:block">`
+                : `<div style="width:28px;height:28px;border-radius:7px;background:var(--grad-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-size:10px;font-weight:700">${esc((c.nome || '?').slice(0, 2).toUpperCase())}</div>`}
+            </td>
+            <td><a class="link" href="#/clientes/${c.id}" onclick="event.preventDefault();event.stopPropagation();abrirModalEditarCliente('${c.id}')">${esc(c.nome)}</a></td>
             <td>${esc(c.segmento) || '—'}</td>
             <td>${(c.produtos || []).map((p) => esc(p.nome)).join(', ') || '—'}</td>
             <td><span class="pill">${esc(c.status)}</span></td>
@@ -2644,8 +2662,10 @@ function renderTabelaClientes(clientes) {
 async function toggleFormCliente() {
   let produtos = [];
   let diagnosticosExternos = [];
+  let colaboradores = [];
   try { ({ produtos } = await api('produtos')); } catch (e) { /* segue sem a lista se falhar */ }
   try { ({ diagnosticos: diagnosticosExternos } = await api('diagnosticos?tipo=externo')); } catch (e) { /* opcional */ }
+  try { ({ colaboradores } = await api('colaboradores')); } catch (e) { /* opcional */ }
 
   abrirModal({
     eyebrow: 'Cadastro',
@@ -2699,6 +2719,23 @@ async function toggleFormCliente() {
             <div class="multi-dropdown"></div>
           </div>
         </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Colaborador responsável (opcional)</label>
+            <select name="colaborador_id">
+              <option value="">Vincular depois</option>
+              ${colaboradores.map((c) => `<option value="${c.id}">${esc(c.nome)}${c.cargo ? ' (' + esc(c.cargo) + ')' : ''}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Módulo</label>
+            <select name="colaborador_modulo">
+              <option value="assessoria">Assessoria</option>
+              <option value="marketing">Marketing</option>
+              <option value="comercial">Comercial</option>
+            </select>
+          </div>
+        </div>
         <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar cliente</button>
       </form>
     `,
@@ -2746,6 +2783,22 @@ async function toggleFormCliente() {
         await enviarLogo(cliente.id, arquivoLogo);
       }
 
+      const colaboradorId = form.colaborador_id?.value;
+      if (colaboradorId) {
+        try {
+          await api('vinculos', {
+            method: 'POST',
+            body: JSON.stringify({
+              cliente_id: cliente.id,
+              usuario_id: colaboradorId,
+              modulo: form.colaborador_modulo.value,
+            }),
+          });
+        } catch (erroVinculo) {
+          toast('Cliente criado, mas houve um problema ao vincular o colaborador: ' + erroVinculo.message);
+        }
+      }
+
       toast('Cliente criado com sucesso');
       fecharModal();
       viewClientesLista();
@@ -2776,10 +2829,24 @@ function enviarLogo(clienteId, file) {
 }
 
 // ============================================================================
-// VIEW: DETALHE DO CLIENTE (cadastro central + vínculos de colaboradores)
+// MODAL: EDITAR CLIENTE (cadastro central + vínculos de colaboradores)
 // ============================================================================
+// Guarda o id do cliente que está aberto no modal no momento — usado pelas
+// ações internas (trocar logo, vincular/remover colaborador) pra saber a
+// quem se referem, sem depender da URL.
+let _clienteModalId = null;
+
+// Rota antiga (#/clientes/<id>) continua funcionando — só garante que a
+// lista esteja na tela por trás e abre o modal por cima dela.
 async function viewClienteDetalhe(clienteId) {
-  document.getElementById('main').innerHTML = `${htmlCarregando()}`;
+  if (!document.getElementById('tabela-clientes')) {
+    await viewClientesLista();
+  }
+  abrirModalEditarCliente(clienteId);
+}
+
+async function abrirModalEditarCliente(clienteId) {
+  _clienteModalId = clienteId;
 
   let cliente, vinculos, colaboradores;
   try {
@@ -2791,71 +2858,126 @@ async function viewClienteDetalhe(clienteId) {
       ({ colaboradores } = await api('colaboradores'));
     }
   } catch (e) {
-    document.getElementById('main').innerHTML = `<p class="empty">${esc(e.message)}</p>`;
+    toast(e.message);
     return;
   }
 
-  document.getElementById('main').innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
-      <div style="display:flex;gap:1rem;align-items:flex-start">
-        <div class="logo-editor ${usuario.role === 'admin' ? 'editavel' : ''}" ${usuario.role === 'admin' ? `onclick="document.getElementById('input-logo-detalhe').click()" title="Trocar logo"` : ''}>
-          ${cliente.logo_url
-            ? `<img src="${esc(cliente.logo_url)}" alt="">`
-            : `<div class="logo-editor-fallback">${esc((cliente.nome || '?').slice(0, 2))}</div>`}
-          ${usuario.role === 'admin' ? `
+  const ehAdmin = usuario.role === 'admin';
+
+  abrirModal({
+    eyebrow: 'Cliente',
+    titulo: cliente.nome,
+    subtitulo: 'Os dados de Nome Fantasia aparecem nos documentos do sistema.',
+    corpoHtml: `
+      <form id="editar-cliente-form">
+        <div class="field" style="display:flex;align-items:center;gap:14px">
+          <div id="preview-logo-editar" class="logo-editor editavel" onclick="document.getElementById('input-logo-editar').click()" title="Trocar logo" style="width:56px;height:56px;flex-shrink:0">
+            ${cliente.logo_url
+              ? `<img src="${esc(cliente.logo_url)}" alt="">`
+              : `<div class="logo-editor-fallback">${esc((cliente.nome || '?').slice(0, 2))}</div>`}
             <span class="avatar-cam" style="width:18px;height:18px;bottom:-3px;right:-3px">
               <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </span>
-          ` : ''}
+          </div>
+          <input type="file" name="logo" accept="image/*" id="input-logo-editar" style="display:none">
+          <div style="flex:1;font-size:12px;color:var(--ink-faint)">Clique na imagem para trocar o logo</div>
         </div>
-        <input type="file" id="input-logo-detalhe" accept="image/*" style="display:none">
-        <div>
-          <div class="eyebrow">Cliente</div>
-          <h1>${esc(cliente.nome)}</h1>
-          <p class="sub" style="margin-bottom:1.5rem">${esc(cliente.segmento)} · ${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ')}</p>
+        <div class="grid2">
+          <div class="field">
+            <label>Tipo de documento</label>
+            <select name="tipo_documento">
+              <option value="cnpj" ${cliente.tipo_documento === 'cnpj' ? 'selected' : ''}>CNPJ</option>
+              <option value="cpf" ${cliente.tipo_documento === 'cpf' ? 'selected' : ''}>CPF</option>
+            </select>
+          </div>
+          <div class="field"><label>CNPJ / CPF</label><input name="cnpj_cpf" value="${esc(cliente.cnpj_cpf)}" placeholder="00.000.000/0000-00"></div>
         </div>
-      </div>
-      ${usuario.role === 'admin' ? `
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <button class="btn btn-outline" onclick="toggleStatusCliente('${clienteId}', '${cliente.status === 'ativo' ? 'inativo' : 'ativo'}')">${cliente.status === 'ativo' ? 'Inativar' : 'Ativar'}</button>
-          <button class="btn btn-outline" style="color:#d3455a;border-color:#d3455a" onclick="excluirCliente('${clienteId}')">Excluir</button>
+        <div class="grid2">
+          <div class="field"><label>Razão social</label><input name="razao_social" value="${esc(cliente.razao_social)}"></div>
+          <div class="field"><label>Nome fantasia</label><input name="nome" required value="${esc(cliente.nome)}" placeholder="Como vai aparecer nos documentos"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Segmento</label><input name="segmento" value="${esc(cliente.segmento)}"></div>
+          <div class="field"><label>Interlocutor</label><input name="interlocutor" value="${esc(cliente.interlocutor)}"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Telefone</label><input name="telefone" value="${esc(cliente.telefone)}"></div>
+          <div class="field"><label>E-mail</label><input type="email" name="email" value="${esc(cliente.email)}"></div>
+        </div>
+        <div class="field">
+          <label>Produtos contratados</label>
+          <p class="sub" style="margin:-2px 0 6px">${(cliente.produtos || []).map((p) => esc(p.nome)).join(', ') || 'Nenhum produto vinculado ainda.'}</p>
+        </div>
+        <button class="btn btn-navy" type="submit" style="width:100%;margin-top:.4rem">Salvar alterações</button>
+      </form>
+
+      ${ehAdmin ? `
+        <div style="display:flex;gap:8px;margin-top:1.2rem">
+          <button type="button" class="btn btn-outline" style="flex:1" onclick="toggleStatusCliente('${clienteId}', '${cliente.status === 'ativo' ? 'inativo' : 'ativo'}')">${cliente.status === 'ativo' ? 'Inativar cliente' : 'Ativar cliente'}</button>
+          <button type="button" class="btn btn-outline" style="flex:1;color:#d3455a;border-color:#d3455a" onclick="excluirCliente('${clienteId}')">Excluir cliente</button>
+        </div>
+
+        <div class="card" style="margin-top:1rem">
+          <h3 style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:4px">Colaboradores vinculados</h3>
+          <p class="sub" style="margin-bottom:1rem">Só os colaboradores vinculados aqui veem e editam este cliente nos módulos correspondentes.</p>
+          <div id="lista-vinculos" style="margin-bottom:1rem"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="sel-colaborador" style="flex:1;min-width:160px;padding:9px;border:1.5px solid var(--line);border-radius:4px">
+              <option value="">Selecione um colaborador...</option>
+              ${(colaboradores || []).map((c) => `<option value="${c.id}">${esc(c.nome)}${c.cargo ? ' (' + esc(c.cargo) + ')' : ''}</option>`).join('')}
+            </select>
+            <select id="sel-modulo" style="padding:9px;border:1.5px solid var(--line);border-radius:4px">
+              <option value="assessoria">Assessoria</option>
+              <option value="marketing">Marketing</option>
+              <option value="comercial">Comercial</option>
+            </select>
+            <button type="button" class="btn btn-navy" onclick="vincularColaborador('${clienteId}')">Vincular</button>
+          </div>
         </div>
       ` : ''}
-    </div>
+    `,
+  });
 
-    ${usuario.role === 'admin' ? `
-    <div class="card">
-      <h3 style="font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);margin-bottom:4px">Colaboradores vinculados</h3>
-      <p class="sub" style="margin-bottom:1rem">Só os colaboradores vinculados aqui veem e editam este cliente nos módulos correspondentes.</p>
-      <div id="lista-vinculos" style="margin-bottom:1rem"></div>
-      <div style="display:flex;gap:8px">
-        <select id="sel-colaborador" style="flex:1;padding:9px;border:1.5px solid var(--line);border-radius:4px">
-          <option value="">Selecione um colaborador...</option>
-          ${(colaboradores || []).map((c) => `<option value="${c.id}">${esc(c.nome)}${c.cargo ? ' (' + esc(c.cargo) + ')' : ''}</option>`).join('')}
-        </select>
-        <select id="sel-modulo" style="padding:9px;border:1.5px solid var(--line);border-radius:4px">
-          <option value="assessoria">Assessoria</option>
-          <option value="marketing">Marketing</option>
-          <option value="comercial">Comercial</option>
-        </select>
-        <button class="btn btn-navy" onclick="vincularColaborador('${clienteId}')">Vincular</button>
-      </div>
-    </div>
-    ` : ''}
-  `;
-
-  if (usuario.role === 'admin') {
+  if (ehAdmin) {
     renderVinculos(vinculos);
-    document.getElementById('input-logo-detalhe').addEventListener('change', async (e) => {
+    document.getElementById('input-logo-editar').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       try {
         await enviarLogo(clienteId, file);
         toast('Logo atualizado');
-        viewClienteDetalhe(clienteId);
+        abrirModalEditarCliente(clienteId);
       } catch (err) { toast(err.message); }
     });
   }
+
+  document.getElementById('editar-cliente-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      await api('clientes?id=' + clienteId, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          nome: form.nome.value,
+          razao_social: form.razao_social.value,
+          tipo_documento: form.tipo_documento.value,
+          cnpj_cpf: form.cnpj_cpf.value,
+          segmento: form.segmento.value,
+          interlocutor: form.interlocutor.value,
+          telefone: form.telefone.value,
+          email: form.email.value,
+        }),
+      });
+      toast('Cliente atualizado com sucesso');
+      fecharModal();
+      viewClientesLista();
+    } catch (err) {
+      toast(err.message);
+      btn.disabled = false;
+    }
+  });
 }
 
 function renderVinculos(vinculos) {
@@ -2867,7 +2989,7 @@ function renderVinculos(vinculos) {
   el.innerHTML = vinculos.map((v) => `
     <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface);border-radius:5px;padding:8px 12px;margin-bottom:6px">
       <span style="font-size:13px">${esc(v.usuarios?.nome)} <span style="font-size:11px;color:var(--ink-faint);text-transform:uppercase">· ${esc(v.modulo)}</span></span>
-      <button style="background:none;border:none;color:#e53e3e;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer" onclick="removerVinculo('${v.id}')">Remover</button>
+      <button type="button" style="background:none;border:none;color:#e53e3e;font-size:11px;font-weight:700;text-transform:uppercase;cursor:pointer" onclick="removerVinculo('${v.id}')">Remover</button>
     </div>
   `).join('');
 }
@@ -2878,7 +3000,8 @@ async function toggleStatusCliente(clienteId, novoStatus) {
   try {
     await api('clientes?id=' + clienteId, { method: 'PATCH', body: JSON.stringify({ status: novoStatus }) });
     toast(novoStatus === 'ativo' ? 'Cliente ativado' : 'Cliente inativado');
-    viewClienteDetalhe(clienteId);
+    fecharModal();
+    viewClientesLista();
   } catch (e) { toast(e.message); }
 }
 
@@ -2887,7 +3010,8 @@ async function excluirCliente(clienteId) {
   try {
     await api('clientes?id=' + clienteId, { method: 'DELETE' });
     toast('Cliente excluído');
-    location.hash = '#/clientes';
+    fecharModal();
+    viewClientesLista();
   } catch (e) { toast(e.message); }
 }
 
@@ -2898,16 +3022,15 @@ async function vincularColaborador(clienteId) {
   try {
     await api('vinculos', { method: 'POST', body: JSON.stringify({ cliente_id: clienteId, usuario_id, modulo }) });
     toast('Colaborador vinculado');
-    viewClienteDetalhe(clienteId);
+    abrirModalEditarCliente(clienteId);
   } catch (e) { toast(e.message); }
 }
 
 async function removerVinculo(id) {
-  const clienteId = location.hash.split('/')[2];
   try {
     await api('vinculos?id=' + id, { method: 'DELETE' });
     toast('Vínculo removido');
-    viewClienteDetalhe(clienteId);
+    abrirModalEditarCliente(_clienteModalId);
   } catch (e) { toast(e.message); }
 }
 
@@ -3355,7 +3478,12 @@ async function viewAssessoriaDetalhe(clienteId) {
   document.getElementById('main').innerHTML = `
     <div class="ae-shell">
       <nav class="ae-side">
-        <div class="ae-side-name" id="ae-side-name">${esc(aeData.name || aeCliente.nome)}</div>
+        <div class="ae-side-head">
+          ${aeCliente.logo_url
+            ? `<img class="ae-side-logo" src="${esc(aeCliente.logo_url)}" alt="">`
+            : `<div class="ae-side-logo-fallback">${esc((aeCliente.nome || '?').slice(0, 2).toUpperCase())}</div>`}
+          <div class="ae-side-name" id="ae-side-name" style="margin-bottom:0">${esc(aeData.name || aeCliente.nome)}</div>
+        </div>
         <div class="ae-side-sub">Relatório ${esc(aeData.year)}</div>
         <div class="ae-nav" id="ae-nav">
           <button class="active" data-sec="capa" onclick="aeGoSec('capa', this)">Capa</button>
@@ -3705,12 +3833,19 @@ function aeAddOkrDom(o, i) {
   const d = document.createElement('div'); d.className = 'ae-card'; d.dataset.okrId = o.id || gerarId();
   const ki = (o.krs || []).map((k) => aeHtmlKr(k)).join('');
   d.innerHTML = `
-    <div class="ae-card-title">OKR ${i + 1}<span class="ae-okr-avg" data-okr-avg></span></div>
-    <div class="ae-field" style="margin-bottom:.9rem"><label>Objetivo</label><textarea class="ae-oo" rows="2" oninput="aeAutosave()">${esc(o.obj)}</textarea></div>
+    <div class="ae-okr-titlebar">
+      <span class="ae-okr-badge">OKR ${i + 1}</span>
+      <span class="ae-okr-avg" data-okr-avg></span>
+    </div>
+    <div class="ae-field" style="margin-bottom:.9rem">
+      <textarea class="ae-oo" rows="1" placeholder="Escreva o objetivo deste OKR..." oninput="aeAutoresize(this);aeAutosave()">${esc(o.obj)}</textarea>
+    </div>
     <div class="ae-progress-track" data-okr-bar style="margin-bottom:1rem"><div class="ae-progress-fill" style="width:0%"></div></div>
     <div class="ae-okr-krs">${ki}</div>
     <button class="ae-add" style="margin-top:.6rem" onclick="aeAddKR(this)">+ Key Result</button>
   `;
+  const campoObjetivo = d.querySelector('.ae-oo');
+  requestAnimationFrame(() => aeAutoresize(campoObjetivo));
   document.getElementById('ae-okr-list').appendChild(d);
   aeAtualizarMediaOkr(d);
 }
@@ -3790,6 +3925,15 @@ function aeCollect() {
         .filter((k) => k.l),
     })),
   };
+}
+
+// Faz o campo de "Objetivo" do OKR crescer em altura conforme o texto
+// digitado, já que ele agora funciona visualmente como um título, sem
+// caixa de fundo — precisa acompanhar o texto pra não cortar.
+function aeAutoresize(textarea) {
+  if (!textarea) return;
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
 }
 
 function aeAutosave() {
